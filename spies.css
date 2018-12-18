@@ -1,0 +1,62 @@
+/*The Header CSS Styling*/
+header{
+	 padding: 0.25em;
+	 color:rgb(0,184,255);
+	 background-color: black;
+	 font-size:5vw;
+	 text-align: center;
+}
+
+.leftSection{
+	 background-color: black;
+	 color:rgb(0,184,255);
+	 -webkit-flex: 1;
+	 -ms-flex: 1;
+	 flex: 1;
+	 min-width:100px;
+	 max-width:120px;
+}
+
+.rightSection{
+	 -webkit-flex: 3;
+	 -ms-flex: 3;
+	 flex: 3;
+}
+
+.midSection {
+	 display: -webkit-flex;
+	 display: flex;
+	 border: 1px solid black;
+}
+
+/* Responsive layout - makes the menu and the content (inside the section) sit on top of each other instead of next to each other */
+@media (max-width: 600px) {
+	 .midSection {
+		 -webkit-flex-direction: column;
+		 flex-direction: column;
+		 border: 1px solid black;
+	 }
+  
+	 .leftSection{
+		 max-width:100%;
+  
+	 }
+}
+
+.bottomSection {
+     display: -webkit-flex;
+     display: flex;
+	 background-color: black;
+	 color: white;
+	 margin-left:auto;
+	 margin-right:auto;
+}
+
+/*The Title Section CSS Styling*/
+.sectionTitle{
+	 padding: 0.1em;
+	 font-size : 4.75vmin;
+	 text-align: center;
+	 text-decoration: underline;
+	 font-weight: bold;
+}
