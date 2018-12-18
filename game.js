@@ -40,8 +40,18 @@ function init() {
 	 function onKeyDown(event) {
 		 if (event.keyCode == 38 && Game_State == "Start") // Up Arrow
 			 go_to_Game_Board();
-		 else if (event.keyCode == 32 ) // Spacebar
-			 fillLibraryOfImages();
+		 else if(event.keyCode == 38 && Game_State != "Start"){
+			 //Clear the Scene
+			 while(imagesOnDisplay.length >=1){
+				 scene.remove(imagesOnDisplay[0]);
+				 imagesOnDisplay.shift();
+				 libraryOfImages = [];
+			 }
+			 
+			 scene.add(startGame);
+			 Game_State = "Start";
+			 
+		 }
 	 }; 
 	 document.addEventListener('keydown', onKeyDown, false);
 	 
@@ -74,14 +84,12 @@ function init() {
 	 //Load the Start Screens
 	 function load_Start_Screen(){
 		 scene.add(startGame);
-		 Game_State = "Start";
-		 
+		 Game_State = "Start";		 
 	 }
 	 
 	 //Go to the Game Board
 	 function go_to_Game_Board(){
 		 scene.remove(startGame);
-		 displayPlaceHolders();
 		 Game_State = "Game";
 		 fillLibraryOfImages();
 	 }
@@ -125,12 +133,14 @@ function init() {
 			 }).always(function() {
 				 console.log("Anime Loaded");
 				  //Temp-----------------------------------
+				  /**
 				 for(var x = 0; x < animeImages.length; x++){
 					 animeImages[x].sprite = loadImagesfromText(animeImages[x].filename,"Anime",animeImages[x].backgroundColor);
 					 animeImages[x].sprite.characterName = animeImages[x].name;
 					 animeImages[x].sprite.backgroundColor = animeImages[x].backgroundColor;
 					 libraryOfImages.push(animeImages[x].sprite);
 				 }
+				 **/
 				 //console.log(libraryOfImages);
 				 //displayPlaceHolders();
 		 });
@@ -167,12 +177,14 @@ function init() {
 			 }).always(function() {
 				 console.log("Cartoon Loaded");
 				  //Temp-----------------------------------
+				  /**
 				 for(var x = 0; x < cartoonImages.length; x++){
 					 cartoonImages[x].sprite = loadImagesfromText(cartoonImages[x].filename,"Cartoon",cartoonImages[x].backgroundColor);
 					 cartoonImages[x].sprite.characterName = cartoonImages[x].name;
 					 cartoonImages[x].sprite.backgroundColor = cartoonImages[x].backgroundColor;
 					 libraryOfImages.push(cartoonImages[x].sprite);
 				 }
+				 **/
 		 });
 	 }
 	
@@ -206,12 +218,14 @@ function init() {
 			 }).always(function() {
 				 console.log("Games Loaded");
 				  //Temp-----------------------------------
+				  /**
 				 for(var x = 0; x < gameImages.length; x++){
 					 gameImages[x].sprite = loadImagesfromText(gameImages[x].filename,"Game",gameImages[x].backgroundColor);
 					 gameImages[x].sprite.characterName = gameImages[x].name;
 					 gameImages[x].sprite.backgroundColor = gameImages[x].backgroundColor;
 					 libraryOfImages.push(gameImages[x].sprite);
 				 }
+				 **/
 		 });	 
 	 }
 	 
@@ -308,33 +322,77 @@ function init() {
 	 
 	 //
 	 function fillLibraryOfImages(){
-		 //First get a tally of all applicable Images
-		 var totalImages = 0;
-		 totalImages += animeImages.length;
-		 totalImages += cartoonImages.length;
-		 totalImages += gameImages.length;
+
 		 
-		 console.log("animeImages Number = " + animeImages.length);
-		 console.log("cartoonImages Number = " + cartoonImages.length);
-		 console.log("gameImages Number = " + gameImages.length);
+		 // I have an additional section size here because at times a player may not want a section...
+		 // in other words, setting it to zero
+		 animeSize = animeImages.length;
+		 cartoonSize = cartoonImages.length;
+		 gameSize = gameImages.length;
+		 
+		 //First get a tally of all applicable Images
+		 var totalImages = animeSize + cartoonSize + gameSize;
+		 
+		 console.log("animeImages Number = " + animeSize);
+		 console.log("cartoonImages Number = " + cartoonSize);
+		 console.log("gameImages Number = " + gameSize);
 		 console.log("Total Number of Images = " + totalImages);
 		 var listOfRandomImages = [];
 		 
-		 if(totalImages >= 30){
-			 while(listOfRandomImages.length <= 23){
-				 var num = Math.floor(Math.random()*totalImages);
-				 
-				 var uniqueNumber = true;
-				 
-				 for(var x=0; x<listOfRandomImages.length && uniqueNumber; x++){
-					 if( listOfRandomImages[x] == num)
-						 uniqueNumber = false;
+		 if(totalImages >= 23){
+			 if(totalImages > 23){
+				 //Randomly Select Characters
+				 while(listOfRandomImages.length <= 23){
+					 var arrayNumber = Math.floor(Math.random()*totalImages);
+					 
+					 var uniqueNumber = true;
+					 
+					 for(var x=0; x<listOfRandomImages.length && uniqueNumber != false; x++){
+						 if( listOfRandomImages[x] == arrayNumber)
+							 uniqueNumber = false;
+					 }
+					 //console.log("Results: "+uniqueNumber+" arrayNumber = "+arrayNumber);
+					 if(uniqueNumber == true){
+						 //console.log("Results: "+uniqueNumber+" arrayNumber = "+arrayNumber);
+						 listOfRandomImages.push(arrayNumber);
+					 }
+				 }				 
+				 //Load the Images from various sections
+				 while(listOfRandomImages.length >= 1){
+					 //First Check if it under anime and if it is add the anime
+					 if(listOfRandomImages[0]  < animeSize){
+						 var x = listOfRandomImages[0];
+						 animeImages[x].sprite = loadImagesfromText(animeImages[x].filename,"Anime",animeImages[x].backgroundColor);
+						 animeImages[x].sprite.characterName = animeImages[x].name;
+						 animeImages[x].sprite.backgroundColor = animeImages[x].backgroundColor;
+						 libraryOfImages.push(animeImages[x].sprite);			
+						 listOfRandomImages.shift();
+					 }
+					 //Second Check if it under Cartoon and if it is add the Cartoon
+					 else if((listOfRandomImages[0]-animeSize)  < cartoonSize){
+						 var x = listOfRandomImages[0]-animeSize;
+						 cartoonImages[x].sprite = loadImagesfromText(cartoonImages[x].filename,"Cartoon",cartoonImages[x].backgroundColor);
+						 cartoonImages[x].sprite.characterName = cartoonImages[x].name;
+						 cartoonImages[x].sprite.backgroundColor = cartoonImages[x].backgroundColor;
+						 libraryOfImages.push(cartoonImages[x].sprite);		
+						 listOfRandomImages.shift();						 
+					 }
+					 //Thirdly Check if it under game and if it is add the game
+					 else if((listOfRandomImages[0]-animeSize-cartoonSize)  < gameSize){
+						 var x = listOfRandomImages[0]-animeSize-cartoonSize;
+						 gameImages[x].sprite = loadImagesfromText(gameImages[x].filename,"Game",gameImages[x].backgroundColor);
+						 gameImages[x].sprite.characterName = gameImages[x].name;
+						 gameImages[x].sprite.backgroundColor = gameImages[x].backgroundColor;
+						 libraryOfImages.push(gameImages[x].sprite);		
+						 listOfRandomImages.shift();						 
+					 }
 				 }
-				 
-				 if(uniqueNumber)
-					 listOfRandomImages.push(num);
 			 }
-			 console.log(listOfRandomImages);
+			 else{
+				 //Upload everything
+			 }
+			 
+			 displayPlaceHolders();
 		 }
 		 else{			 
 			 console.log("Not enough images.... sorry");
