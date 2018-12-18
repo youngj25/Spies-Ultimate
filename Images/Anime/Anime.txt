@@ -1,0 +1,55 @@
+Anime Loading Instructions
+The Format for this process is:
+Series
+Name of the Character
+Name of the Image File
+The Background color of the Card
+The Source of the Image
+
+Dragon Ball
+Master_Roshi
+Master_roshi.png
+Black
+http://rebloggy.com/mine+transparent+Dragonball+Z+Master+Roshi+bdz/search/bestmatch/page/1
+
+Gintama
+Shinpachi
+shinpachi.png
+White
+https://rwalck.wordpress.com/2014/11/05/reading-glasses-strength/
+
+Hajime no Ippo
+Ippo
+ippo.png
+Black
+http://personal.cablemas.com/lagartija/images/anime/
+
+Jojo
+Jonathan
+Jonathan.png
+White
+http://jojo.wikia.com/wiki/File:Jonathan_jojoeoh.png
+
+Naruto
+Jiraiya
+jiraiya.png
+Black
+https://www.ign.com/articles/2008/02/25/naruto-the-three-villains-from-the-maximum-security-prison-review
+
+Your Lie in April
+Kousei
+Kousei.png
+White
+https://eastofthewire.wordpress.com/2014/10/24/shigatsu-wa-kimi-no-uso-episode-3-engrish-demonic-cat-and-terrifying-foreshadowing/
+
+Yowamushi Pedal
+Midousuji
+Yowa.jpg
+White
+https://twitter.com/grossmidousuji/status/774347987199877120
+
+Yu-Gi-Oh
+Dark_Magician_Girl
+Dark_Magician_Girl.png
+Black
+https://www.deviantart.com/yugiohdragon999/art/Dark-Magician-Girl-Render-713329782

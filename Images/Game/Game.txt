@@ -1,0 +1,97 @@
+Game Loading Instructions
+The Format for this process is:
+Series
+Name of the Character
+Name of the Image File
+The Background color of the Card
+The Source of the Image
+
+Angry Birds
+Pig
+Pig.png
+Black
+https://www.kisspng.com/png-bad-piggies-angry-birds-transformers-angry-birds-g-5488987/
+
+Donkey Kong 64
+Cranky Kong
+Cranky_Kong.png
+Black
+http://mario.wikia.com/wiki/Cranky_Kong
+
+Final Fantasy IV
+Cecil
+DissidiaCecilArt.png
+White
+http://finalfantasy.wikia.com/wiki/Cecil_Harvey/Dissidia
+
+Flappy Bird
+Flappy Bird
+FlappyBird.png
+White
+https://gigatap.itch.io/clony-bird
+
+Mario Kart Double Dash
+Baby Mario & Luigi
+Mario_Kart_Double_Dash!!.png
+Black
+http://mario.wikia.com/wiki/File:Babies_and_Chain_Chomp_-_Mario_Kart_Double_Dash!!.png
+
+Megaman
+Megaman
+Mega_Man_SSBU.png
+Black
+https://www.ssbwiki.com/Mega_Man_(SSBU)
+
+Pikmin
+Olimar
+Olimar.png
+Black
+https://www.ssbwiki.com/Olimar_(SSBU)
+
+Pokemon
+Blaziken
+Blaziken.png
+White
+https://www.pokemon.com/us/pokedex/blaziken
+
+Rune Factory Frontier
+Cinnamon
+Cinnamon.png
+Black
+https://therunefactory.fandom.com/wiki/Cinnamon
+
+Rune Factory Frontier
+Selphy
+Selphy.png
+Black
+https://therunefactory.fandom.com/wiki/Selphy
+
+Smash Bros.
+Jigglypuff
+Jigglypuff.png
+Black
+http://pokemon.wikia.com/wiki/Jigglypuff
+
+Splatoon
+Inkling
+Inkling.png
+Black
+https://www.uihere.com/free-cliparts/splatoon-2-mario-kart-8-deluxe-squid-octopus-squid-1534651
+
+Super Mario Galaxy
+King Kaliente
+KingKalienteSMG.png
+Black
+http://villains.wikia.com/wiki/King_Kaliente
+
+Super Mario Odessy
+Pauline
+Pauline.png
+White
+http://mario.wikia.com/wiki/Pauline
+
+Xenoblade
+Dunban
+Dunban2.png
+Black
+http://xenoblade.wikia.com/wiki/Dunban
