@@ -3,7 +3,8 @@ var tableOfSpies = [], libraryOfImages = [], imagesOnDisplay = [], totalImages =
 var animeImages = [], cartoonImages = [], gameImages = [], additionalImages = [];
 var spriteRatioWidthtoHeight =1, spriteRatioHeighttoWidth=1;
 var Width, Height, Game_State = "Start";
-var startGame;
+var startGame, steps = 0, objects = [];
+var saveCardWhiteTexture = null, saveCardBlackTexture = null;
 
 function init() {
 	 // create a scene, that will hold all our elements such as objects, cameras and lights.
@@ -38,15 +39,17 @@ function init() {
 	 
 	 //Keyboard Functions
 	 function onKeyDown(event) {
-		 if (event.keyCode == 38 && Game_State == "Start") // Up Arrow
+		 if (event.keyCode == 32 && Game_State == "Start") // Spacebar
 			 go_to_Game_Board();
-		 else if(event.keyCode == 38 && Game_State != "Start"){
+		 else if(event.keyCode == 32 && Game_State != "Start"){
 			 //Clear the Scene
 			 while(imagesOnDisplay.length >=1){
 				 scene.remove(imagesOnDisplay[0]);
 				 imagesOnDisplay.shift();
 				 libraryOfImages = [];
 			 }
+
+			 objects = [];
 			 
 			 scene.add(startGame);
 			 Game_State = "Start";
@@ -57,12 +60,13 @@ function init() {
 	 
 	 //add spotlight for the shadows
 	 var spotLight = new THREE.SpotLight(0xffffff);
-	 spotLight.position.set(0, 0, 15);
+	 spotLight.position.set(0, 0, 25);
 	 spotLight.castShadow = false;
 	 spotLight.intensity =2;
 	 scene.add(spotLight);			
 	
 	 renderScene();
+	 drag_objects();	 
 	 load_Text_and_Buttons();
 	 load_Start_Screen();
 	 load_Anime_Images();
@@ -73,18 +77,92 @@ function init() {
 	 //Render the Scenes
 	 function renderScene(){
 		 try{
+			 steps++;
 			 //Render steps
 			 //render using requestAnimationFrame
 			 requestAnimationFrame(renderScene);
 			 renderer.render(scene, camera);
-			 //scene.traverse(function (e) {});
+			 scene.traverse(function (e) {
+				 if(e.name == "leftSiding" && steps % 25 == 0 && Game_State != "Start"){
+					 if(e.style == 1){
+						 
+					 }
+					 else if(e.style == 2){
+						 
+					 }
+					 else if(e.style == 3){
+						 
+					 }
+				 }
+				 else if(e.name == "rightSiding" && steps % 25 == 0 && Game_State != "Start"){
+					 if(e.style == 1){
+						 e.material.color  = new THREE.Color("rgb(160,53,53)");
+						 e.style = 2;
+					 }
+					 else if(e.style == 2){
+						 e.material.color  = new THREE.Color("rgb(190,53,53)");
+						 e.style = 3;
+					 }
+					 else if(e.style == 3){
+						 e.material.color  = new THREE.Color("rgb(220,53,53)");
+						 e.style = 1;
+					 }
+				 }
+			 });
 		 }catch(e){}
 	 }
+	 
+	 //Make Objects Draggable - Additionally used as buttons
+	 function drag_objects(){
+		 var dragControls  = new THREE.DragControls( objects, camera, renderer.domElement );
+				
+			 dragControls.addEventListener( 'dragstart', function(event) {
+																			 if (event.object.name == "startButton"){
+																				 PacMania.emit('Player has joined',gameSettingsOptions[0]);
+																				 remove_Game_Settings_Screen();
+																				 removeButton(raButton);
+																				 controllerDirection = "";
+																				 scene.remove(occuranceBar);		 
+																				 scene.remove( occuranceCircle );
+																				 if(scene.getObjectByName('SectionHighlight') != null)
+																					 scene.remove(SectionHighlight);
+																			 }
+																			 else if (event.object.name == "cardHolder"){
+																				 console.log("cardHolder");
+																				 event.object.material.color  = new THREE.Color("rgb(23,155,220)");
+																			 }
+																			 
+																			 //else console.log(event.object);
+																			 //console.log("lol start of drag: ");
+																		 });
+																		 
+			 dragControls.addEventListener( 'drag', function(event)   {
+																			 if(event.object.name == "startButton")
+																				 startButton.position.set(startButton.posX, startButton.posY, startButton.posZ);
+																			 else if (event.object.name == "cardHolder")
+																				 event.object.position.set(event.object.posX, event.object.posY, event.object.posZ);
+																		 });
+																		
+			 dragControls.addEventListener( 'dragend', function(event)   {
+																			 if (event.object.name == "occuranceCircle"){
+																				 //console.log(event.object.position.x);
+																				 event.object.position.y = event.object.posY; 
+																				 gameSettingsOptions[0].fruitOccurance = (16 + event.object.position.x) * 2.5 + 10;
+																			 }
+				 
+				 
+			 });
+																		 
+			 //console.log(dragControls);
+			 //https://www.learnthreejs.com/drag-drop-dragcontrols-mouse/
+	 }
+	 
 	 
 	 //Load the Start Screens
 	 function load_Start_Screen(){
 		 scene.add(startGame);
-		 Game_State = "Start";		 
+		 Game_State = "Start";		
+		 steps = 0;		 
 	 }
 	 
 	 //Go to the Game Board
@@ -238,20 +316,33 @@ function init() {
 		  var loader = new THREE.TextureLoader();
 		 loader.crossOrigin = true;
 		 //Black Background
-		 var Texture = loader.load( 'Images/Additional Images/blackbackground.png');
+		 var Texture = loader.load( 'Images/Additional Images/blackBackground.png');
 		 Texture.minFilter = THREE.LinearFilter;
 		 var Imagecover =  new THREE.SpriteMaterial( { map: Texture, color: 0xffffff } );
 		 Imagecover.x = 0;
 		 Imagecover.y = 0;
 		 additionalImages.push(Imagecover);
 		 //White Background
-		 Texture2 = loader.load( 'Images/Additional Images/whiteBackground.png');
-		 Texture2.minFilter = THREE.LinearFilter;
-		 Imagecover2 =  new THREE.SpriteMaterial( { map: Texture2, color: 0xffffff } );
-		 Imagecover2.x = 0;
-		 Imagecover2.y = 0;
-		 additionalImages.push(Imagecover2);
-		 
+		 Texture = loader.load( 'Images/Additional Images/whiteBackground.png');
+		 Texture.minFilter = THREE.LinearFilter;
+		 Imagecover =  new THREE.SpriteMaterial( { map: Texture, color: 0xffffff } );
+		 Imagecover.x = 0;
+		 Imagecover.y = 0;
+		 additionalImages.push(Imagecover);
+		 //Left Siding
+		 Texture = loader.load( 'Images/Additional Images/leftSide.png');
+		 Texture.minFilter = THREE.LinearFilter;
+		 Imagecover =  new THREE.SpriteMaterial( { map: Texture, color: 0xffffff } );
+		 Imagecover.x = 0;
+		 Imagecover.y = 0;
+		 additionalImages.push(Imagecover);
+		 //Right Siding
+		 Texture = loader.load( 'Images/Additional Images/rightSide.png');
+		 Texture.minFilter = THREE.LinearFilter;
+		 Imagecover =  new THREE.SpriteMaterial( { map: Texture, color: 0xffffff } );
+		 Imagecover.x = 0;
+		 Imagecover.y = 0;
+		 additionalImages.push(Imagecover);
 		  
 	 }
 		
@@ -362,27 +453,34 @@ function init() {
 					 //First Check if it under anime and if it is add the anime
 					 if(listOfRandomImages[0]  < animeSize){
 						 var x = listOfRandomImages[0];
-						 animeImages[x].sprite = loadImagesfromText(animeImages[x].filename,"Anime",animeImages[x].backgroundColor);
-						 animeImages[x].sprite.characterName = animeImages[x].name;
-						 animeImages[x].sprite.backgroundColor = animeImages[x].backgroundColor;
+						 
+						 if(animeImages[x].sprite == null){						 
+							 animeImages[x].sprite = loadImagesfromText(animeImages[x].filename,"Anime",animeImages[x].backgroundColor);
+							 animeImages[x].sprite.characterName = animeImages[x].name;
+							 animeImages[x].sprite.backgroundColor = animeImages[x].backgroundColor;
+						 }
 						 libraryOfImages.push(animeImages[x].sprite);			
 						 listOfRandomImages.shift();
 					 }
 					 //Second Check if it under Cartoon and if it is add the Cartoon
 					 else if((listOfRandomImages[0]-animeSize)  < cartoonSize){
 						 var x = listOfRandomImages[0]-animeSize;
-						 cartoonImages[x].sprite = loadImagesfromText(cartoonImages[x].filename,"Cartoon",cartoonImages[x].backgroundColor);
-						 cartoonImages[x].sprite.characterName = cartoonImages[x].name;
-						 cartoonImages[x].sprite.backgroundColor = cartoonImages[x].backgroundColor;
+						 if(cartoonImages[x].sprite == null){			
+							 cartoonImages[x].sprite = loadImagesfromText(cartoonImages[x].filename,"Cartoon",cartoonImages[x].backgroundColor);
+							 cartoonImages[x].sprite.characterName = cartoonImages[x].name;
+							 cartoonImages[x].sprite.backgroundColor = cartoonImages[x].backgroundColor;
+						 }
 						 libraryOfImages.push(cartoonImages[x].sprite);		
 						 listOfRandomImages.shift();						 
 					 }
 					 //Thirdly Check if it under game and if it is add the game
 					 else if((listOfRandomImages[0]-animeSize-cartoonSize)  < gameSize){
 						 var x = listOfRandomImages[0]-animeSize-cartoonSize;
-						 gameImages[x].sprite = loadImagesfromText(gameImages[x].filename,"Game",gameImages[x].backgroundColor);
-						 gameImages[x].sprite.characterName = gameImages[x].name;
-						 gameImages[x].sprite.backgroundColor = gameImages[x].backgroundColor;
+						 if(gameImages[x].sprite == null){			
+							 gameImages[x].sprite = loadImagesfromText(gameImages[x].filename,"Game",gameImages[x].backgroundColor);
+							 gameImages[x].sprite.characterName = gameImages[x].name;
+							 gameImages[x].sprite.backgroundColor = gameImages[x].backgroundColor;
+						 }
 						 libraryOfImages.push(gameImages[x].sprite);		
 						 listOfRandomImages.shift();						 
 					 }
@@ -403,7 +501,7 @@ function init() {
 	  
 	 //
 	 function displayPlaceHolders(){
-		 var initialHeight = 15;
+		 var initialHeight = 11.75;
 		 for(var x = 0; x<libraryOfImages.length && x < 24; x++){
 			 //Set the Image
 			 var tempScene = new THREE.Sprite();	
@@ -418,21 +516,25 @@ function init() {
 			 //Set the Card Background Color
 			 //Make the Card Background Black
 			 if(tempScene.material.backgroundColor.trim() == "Black")				 
-				 cardHolder.material = additionalImages[0];
+				 cardHolder.material = create_Black_Card();
 			 //Make the Card Background White
 			 else if(tempScene.material.backgroundColor.trim()  == "White") 
-				 cardHolder.material = additionalImages[1];
-				 
-			 cardHolder.position.set((x%6)*8-20,-10*Math.floor(x/6)+initialHeight-1,-2.1); //xyz
+				 cardHolder.material = create_White_Card();
+			 cardHolder.posX =(x%6)*8-20;	 
+			 cardHolder.posY = -10*Math.floor(x/6)+initialHeight-1;	 
+			 cardHolder.posZ = -2.1;	 
+			 cardHolder.position.set(cardHolder.posX, cardHolder.posY, cardHolder.posZ); //xyz
 			 cardHolder.scale.set(7,9,1);
+			 cardHolder.name = "cardHolder";
 			 imagesOnDisplay.push(cardHolder);
 			 scene.add(imagesOnDisplay[imagesOnDisplay.length-1]);
-			 
+			 objects.push(imagesOnDisplay[imagesOnDisplay.length-1]);
 			 //Add the Character's Name
 			 //console.log(libraryOfImages[x].characterName);
 			 var text = text_creation(libraryOfImages[x].characterName,0,2,0.75);
 			 
 			 text.parameters.font= "115px Arial";
+			 //text.parameters.font= "70px Arial";
 			 text.parameters.fillStyle= "Yellow";
 			 text.position.set((x%6)*8-20,-9.97*Math.floor(x/6)+initialHeight-4.58, -1.9);
 			 text.scale.set(6,1.25,1);
@@ -440,6 +542,31 @@ function init() {
 			 imagesOnDisplay.push(text);
 			 scene.add(imagesOnDisplay[imagesOnDisplay.length-1]);
 		 }
+		 
+		 //Left Siding
+		 var leftSiding = new THREE.Sprite();				 
+		 leftSiding.material = additionalImages[2];
+		 leftSiding.material.color  = new THREE.Color("rgb(23,155,220)");
+		 leftSiding.position.set(-16.5,-16.5,-2.5); //xyz
+		 leftSiding.scale.set(20,20,1);
+		 leftSiding.name = "leftSiding";
+		 leftSiding.style = 1;		 
+		 imagesOnDisplay.push(leftSiding);
+		 scene.add(imagesOnDisplay[imagesOnDisplay.length-1]);
+		 
+		 //Right Siding
+		 var rightSiding = new THREE.Sprite();				 
+		 rightSiding.material = additionalImages[3];
+		 rightSiding.material.color  = new THREE.Color("rgb(220,53,53)");
+		 rightSiding.position.set(16.5,-16.5,-2.5); //xyz
+		 rightSiding.scale.set(20,20,1);
+		 rightSiding.name = "rightSiding";
+		 rightSiding.style = 1;		 
+		 imagesOnDisplay.push(rightSiding);
+		 scene.add(imagesOnDisplay[imagesOnDisplay.length-1]);		 
+		 
+		 //Start the steps
+		 steps = 0;
 	 }
 	 
 	 //
@@ -454,7 +581,45 @@ function init() {
 		 
 	 }
 	 
+	 //Setting the cards 
+	 function divide_cards_into_teams(){
+		 //Help from http://www.color-blindness.com/coblis-color-blindness-simulator/
+		 // "Blue" - Team Aqua
+		 // "Red" - Team Magma
+		 // "Dark Grey" - Civilian 
+		 // "Assassin" - 
+		 var cardsArray= ["Blue","Red","Dark Grey","Assassin" ];
+		 console.log("Cards Array Lengt : "+cardsArray.length);
+		 //cardsArray.push
+		 
+	 }
 	 
+	 //Generate Unique card with a White Background
+	 function create_White_Card(){
+		 //card;
+		 if(saveCardWhiteTexture == null){
+			 var loader = new THREE.TextureLoader();
+			 loader.crossOrigin = true;
+			 saveCardWhiteTexture = loader.load( 'Images/Additional Images/whiteBackground.png' );
+			 saveCardWhiteTexture.minFilter = THREE.LinearFilter;
+		 }
+		 var Cards = new THREE.SpriteMaterial( { map: saveCardWhiteTexture, color: 0xffffff } );
+		 return Cards;
+	 }
+	 
+	 //Generate Unique card with a Black Background
+	 function create_Black_Card(){
+		 //card;
+		 if(saveCardBlackTexture == null){
+			 var loader = new THREE.TextureLoader();
+			 loader.crossOrigin = true;
+			 saveCardBlackTexture = loader.load( 'Images/Additional Images/blackBackground.png' );
+			 saveCardBlackTexture.minFilter = THREE.LinearFilter;
+		 }
+		 var Cards = new THREE.SpriteMaterial( { map: saveCardBlackTexture, color: 0xffffff } );
+		 return Cards;
+	 }
+	  
 	 //Text Creation Function
 	 //Since this is used more than 10 times throughout the code
 	 //I created this function to cut down on the length and effort
