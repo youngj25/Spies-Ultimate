@@ -3,7 +3,9 @@ var tableOfSpies = [], libraryOfImages = [], imagesOnDisplay = [], totalImages =
 var animeImages = [], cartoonImages = [], gameImages = [], additionalImages = [];
 var spriteRatioWidthtoHeight =1, spriteRatioHeighttoWidth=1;
 var Width, Height, Game_State = "Start";
-var startGame;
+var startGame, steps = 0, objects = [];
+var leftScores = 0, rightScores = 0, ScoreBoard = [], saveLeftScoreTexture = null, saveRightScoreTexture = null;
+var saveCardWhiteTexture = null, saveCardBlackTexture = null;
 
 function init() {
 	 // create a scene, that will hold all our elements such as objects, cameras and lights.
@@ -38,16 +40,27 @@ function init() {
 	 
 	 //Keyboard Functions
 	 function onKeyDown(event) {
-		 if (event.keyCode == 38 && Game_State == "Start") // Up Arrow
+		 if (event.keyCode == 32 && Game_State == "Start") // Spacebar
 			 go_to_Game_Board();
-		 else if(event.keyCode == 38 && Game_State != "Start"){
+		 else if(event.keyCode == 32 && Game_State != "Start"){
 			 //Clear the Scene
 			 while(imagesOnDisplay.length >=1){
 				 scene.remove(imagesOnDisplay[0]);
 				 imagesOnDisplay.shift();
-				 libraryOfImages = [];
 			 }
 			 
+			 //Clear the clickable/draggable objects
+			 while(objects.length >=1){
+				 objects.shift();
+			 }
+			 
+			 //Clear the Score Board
+			 while(ScoreBoard.length >=1){
+				 scene.remove(ScoreBoard[0]);
+				 ScoreBoard.shift();
+			 }
+			 
+			 libraryOfImages = [];
 			 scene.add(startGame);
 			 Game_State = "Start";
 			 
@@ -57,12 +70,13 @@ function init() {
 	 
 	 //add spotlight for the shadows
 	 var spotLight = new THREE.SpotLight(0xffffff);
-	 spotLight.position.set(0, 0, 15);
+	 spotLight.position.set(0, 0, 25);
 	 spotLight.castShadow = false;
 	 spotLight.intensity =2;
 	 scene.add(spotLight);			
 	
 	 renderScene();
+	 drag_objects();	 
 	 load_Text_and_Buttons();
 	 load_Start_Screen();
 	 load_Anime_Images();
@@ -73,24 +87,100 @@ function init() {
 	 //Render the Scenes
 	 function renderScene(){
 		 try{
+			 steps++;
 			 //Render steps
 			 //render using requestAnimationFrame
 			 requestAnimationFrame(renderScene);
 			 renderer.render(scene, camera);
-			 //scene.traverse(function (e) {});
+			 scene.traverse(function (e) {
+				 if(e.name == "leftSiding" && steps % 25 == 0 && Game_State != "Start"){
+					 if(e.style == 1){
+						 e.material.color  = new THREE.Color("rgb(50,165,250)");
+						 e.style = 2;
+					 }
+					 else if(e.style == 2){
+						 e.material.color  = new THREE.Color("rgb(23,155,220)");
+						 e.style = 1;
+					 }
+				 }
+				 else if(e.name == "rightSiding" && steps % 25 == 0 && Game_State != "Start"){
+					 if(e.style == 1){
+						 e.material.color  = new THREE.Color("rgb(250,93,93)");
+						 e.style = 2;
+					 }
+					 else if(e.style == 2){
+						 e.material.color  = new THREE.Color("rgb(220,53,53)");
+						 e.style = 1;
+					 }
+				 }
+			 });
 		 }catch(e){}
 	 }
 	 
+	 //Make Objects Draggable - Additionally used as buttons
+	 function drag_objects(){
+		 var dragControls  = new THREE.DragControls( objects, camera, renderer.domElement );
+				
+			 dragControls.addEventListener( 'dragstart', function(event) {
+				 if (event.object.name == "startButton"){
+					 PacMania.emit('Player has joined',gameSettingsOptions[0]);
+					 remove_Game_Settings_Screen();
+					 removeButton(raButton);
+					 controllerDirection = "";
+					 scene.remove(occuranceBar);		 
+					 scene.remove( occuranceCircle );
+					 if(scene.getObjectByName('SectionHighlight') != null)
+						 scene.remove(SectionHighlight);
+				 }
+				 else if (event.object.name == "cardHolder"){
+					 if(Math.floor(Math.random()*2)==0 && leftScores < 8){ // Blue
+						 event.object.material.color  = new THREE.Color("rgb(23,155,220)");
+						 
+						 ScoreBoard[leftScores].material.color  = new THREE.Color("rgb(23,155,220)");
+						 leftScores ++;						
+					 }
+					 else if( rightScores < 8){ // Red
+						 event.object.material.color  = new THREE.Color("rgb(220,53,53)");
+						 
+						 ScoreBoard[ScoreBoard.length + rightScores - 8].material.color  = new THREE.Color("rgb(220,53,53)");
+						 rightScores ++;
+					 }
+				 }
+				 
+				 
+				 //console.log("lol start of drag: ");
+			 });
+			 
+			 dragControls.addEventListener( 'drag', function(event)   {
+				 if(event.object.name == "startButton")
+					 startButton.position.set(startButton.posX, startButton.posY, startButton.posZ);
+				 else if (event.object.name == "cardHolder")
+					 event.object.position.set(event.object.posX, event.object.posY, event.object.posZ);
+			 });
+			 
+			 dragControls.addEventListener( 'dragend', function(event)   {
+				 if (event.object.name == "occuranceCircle"){
+					 //console.log(event.object.position.x);
+					 event.object.position.y = event.object.posY; 
+					 gameSettingsOptions[0].fruitOccurance = (16 + event.object.position.x) * 2.5 + 10;
+				 }
+			 });
+		 //console.log(dragControls);
+		 //https://www.learnthreejs.com/drag-drop-dragcontrols-mouse/
+	 }
+	  
 	 //Load the Start Screens
 	 function load_Start_Screen(){
 		 scene.add(startGame);
-		 Game_State = "Start";		 
+		 Game_State = "Start";		
+		 steps = 0;		 
 	 }
 	 
 	 //Go to the Game Board
 	 function go_to_Game_Board(){
 		 scene.remove(startGame);
 		 Game_State = "Game";
+		 leftScores = 0, rightScores = 0;
 		 fillLibraryOfImages();
 	 }
 	  
@@ -131,18 +221,8 @@ function init() {
 			 }).fail(function(jqXHR, textStatus) {
 				 console.log("failed");
 			 }).always(function() {
-				 console.log("Anime Loaded");
-				  //Temp-----------------------------------
-				  /**
-				 for(var x = 0; x < animeImages.length; x++){
-					 animeImages[x].sprite = loadImagesfromText(animeImages[x].filename,"Anime",animeImages[x].backgroundColor);
-					 animeImages[x].sprite.characterName = animeImages[x].name;
-					 animeImages[x].sprite.backgroundColor = animeImages[x].backgroundColor;
-					 libraryOfImages.push(animeImages[x].sprite);
-				 }
-				 **/
-				 //console.log(libraryOfImages);
-				 //displayPlaceHolders();
+				 console.log("Anime Loaded - "+animeImages.length+" images");
+				 
 		 });
 		 
 	 }
@@ -175,16 +255,7 @@ function init() {
 			 }).fail(function(jqXHR, textStatus) {
 				 console.log("failed");
 			 }).always(function() {
-				 console.log("Cartoon Loaded");
-				  //Temp-----------------------------------
-				  /**
-				 for(var x = 0; x < cartoonImages.length; x++){
-					 cartoonImages[x].sprite = loadImagesfromText(cartoonImages[x].filename,"Cartoon",cartoonImages[x].backgroundColor);
-					 cartoonImages[x].sprite.characterName = cartoonImages[x].name;
-					 cartoonImages[x].sprite.backgroundColor = cartoonImages[x].backgroundColor;
-					 libraryOfImages.push(cartoonImages[x].sprite);
-				 }
-				 **/
+				 console.log("Cartoon Loaded - "+cartoonImages.length+" images");
 		 });
 	 }
 	
@@ -216,72 +287,31 @@ function init() {
 			 }).fail(function(jqXHR, textStatus) {
 				 console.log("failed");
 			 }).always(function() {
-				 console.log("Games Loaded");
-				  //Temp-----------------------------------
-				  /**
-				 for(var x = 0; x < gameImages.length; x++){
-					 gameImages[x].sprite = loadImagesfromText(gameImages[x].filename,"Game",gameImages[x].backgroundColor);
-					 gameImages[x].sprite.characterName = gameImages[x].name;
-					 gameImages[x].sprite.backgroundColor = gameImages[x].backgroundColor;
-					 libraryOfImages.push(gameImages[x].sprite);
-				 }
-				 **/
+				 console.log("Games Loaded - "+gameImages.length+" images");
 		 });	 
 	 }
 	 
-	 //Load Anime Images
+	 //Load Additional Images
 	 function load_Additional_Images(){
-		 //Loading Anime Images from the File
+		 //Loading Additional Images from the File
 		 additionalImages=[];
 		 
-		 //Dragon Ball - Master Roshi
 		  var loader = new THREE.TextureLoader();
 		 loader.crossOrigin = true;
-		 //Black Background
-		 var Texture = loader.load( 'Images/Additional Images/blackbackground.png');
+		 //Left Siding
+		 var Texture = loader.load( 'Images/Additional Images/leftSide.png');
 		 Texture.minFilter = THREE.LinearFilter;
 		 var Imagecover =  new THREE.SpriteMaterial( { map: Texture, color: 0xffffff } );
 		 Imagecover.x = 0;
 		 Imagecover.y = 0;
 		 additionalImages.push(Imagecover);
-		 //White Background
-		 Texture2 = loader.load( 'Images/Additional Images/whiteBackground.png');
-		 Texture2.minFilter = THREE.LinearFilter;
-		 Imagecover2 =  new THREE.SpriteMaterial( { map: Texture2, color: 0xffffff } );
-		 Imagecover2.x = 0;
-		 Imagecover2.y = 0;
-		 additionalImages.push(Imagecover2);
-		 
-		  
-	 }
-		
-	 //Loads all of the images and place them into the libraryOfImages
-	 function load_All_Images(){
-		 //First Clear the libraryOfImages
-		 libraryOfImages=[];
-		 
-		 load_Anime_Images();
-		 //load_Cartoon_Images();
-		 //load_Game_Images();
-		 //load_Additional_Images();
-		 
-		 /**
-		 //Anime
-		 for(var x = 0; x < animeImages.length; x++)
-			 libraryOfImages.push(animeImages[x]);
-		 
-		 //Cartoon
-		 for(var x = 0; x < cartoonImages.length; x++)
-			 libraryOfImages.push(cartoonImages[x]);
-		 
-		 //Game
-		 for(var x = 0; x < gameImages.length; x++)
-			 libraryOfImages.push(gameImages[x]);
-		 **/
-		 
-		 //totalImages = animeImages.length + cartoonImages.length + gameImages.length;
-		 //console.log("Total Images = "+ totalImages);
-		 //displayPlaceHolders();
+		 //Right Siding
+		 Texture = loader.load( 'Images/Additional Images/rightSide.png');
+		 Texture.minFilter = THREE.LinearFilter;
+		 Imagecover =  new THREE.SpriteMaterial( { map: Texture, color: 0xffffff } );
+		 Imagecover.x = 0;
+		 Imagecover.y = 0;
+		 additionalImages.push(Imagecover);
 	 }
 	  
 	 //Load and a preset the images for use
@@ -333,10 +363,6 @@ function init() {
 		 //First get a tally of all applicable Images
 		 var totalImages = animeSize + cartoonSize + gameSize;
 		 
-		 console.log("animeImages Number = " + animeSize);
-		 console.log("cartoonImages Number = " + cartoonSize);
-		 console.log("gameImages Number = " + gameSize);
-		 console.log("Total Number of Images = " + totalImages);
 		 var listOfRandomImages = [];
 		 
 		 if(totalImages >= 23){
@@ -362,27 +388,34 @@ function init() {
 					 //First Check if it under anime and if it is add the anime
 					 if(listOfRandomImages[0]  < animeSize){
 						 var x = listOfRandomImages[0];
-						 animeImages[x].sprite = loadImagesfromText(animeImages[x].filename,"Anime",animeImages[x].backgroundColor);
-						 animeImages[x].sprite.characterName = animeImages[x].name;
-						 animeImages[x].sprite.backgroundColor = animeImages[x].backgroundColor;
+						 
+						 if(animeImages[x].sprite == null){						 
+							 animeImages[x].sprite = loadImagesfromText(animeImages[x].filename,"Anime",animeImages[x].backgroundColor);
+							 animeImages[x].sprite.characterName = animeImages[x].name;
+							 animeImages[x].sprite.backgroundColor = animeImages[x].backgroundColor;
+						 }
 						 libraryOfImages.push(animeImages[x].sprite);			
 						 listOfRandomImages.shift();
 					 }
 					 //Second Check if it under Cartoon and if it is add the Cartoon
 					 else if((listOfRandomImages[0]-animeSize)  < cartoonSize){
 						 var x = listOfRandomImages[0]-animeSize;
-						 cartoonImages[x].sprite = loadImagesfromText(cartoonImages[x].filename,"Cartoon",cartoonImages[x].backgroundColor);
-						 cartoonImages[x].sprite.characterName = cartoonImages[x].name;
-						 cartoonImages[x].sprite.backgroundColor = cartoonImages[x].backgroundColor;
+						 if(cartoonImages[x].sprite == null){			
+							 cartoonImages[x].sprite = loadImagesfromText(cartoonImages[x].filename,"Cartoon",cartoonImages[x].backgroundColor);
+							 cartoonImages[x].sprite.characterName = cartoonImages[x].name;
+							 cartoonImages[x].sprite.backgroundColor = cartoonImages[x].backgroundColor;
+						 }
 						 libraryOfImages.push(cartoonImages[x].sprite);		
 						 listOfRandomImages.shift();						 
 					 }
 					 //Thirdly Check if it under game and if it is add the game
 					 else if((listOfRandomImages[0]-animeSize-cartoonSize)  < gameSize){
 						 var x = listOfRandomImages[0]-animeSize-cartoonSize;
-						 gameImages[x].sprite = loadImagesfromText(gameImages[x].filename,"Game",gameImages[x].backgroundColor);
-						 gameImages[x].sprite.characterName = gameImages[x].name;
-						 gameImages[x].sprite.backgroundColor = gameImages[x].backgroundColor;
+						 if(gameImages[x].sprite == null){			
+							 gameImages[x].sprite = loadImagesfromText(gameImages[x].filename,"Game",gameImages[x].backgroundColor);
+							 gameImages[x].sprite.characterName = gameImages[x].name;
+							 gameImages[x].sprite.backgroundColor = gameImages[x].backgroundColor;
+						 }
 						 libraryOfImages.push(gameImages[x].sprite);		
 						 listOfRandomImages.shift();						 
 					 }
@@ -403,7 +436,7 @@ function init() {
 	  
 	 //
 	 function displayPlaceHolders(){
-		 var initialHeight = 15;
+		 var initialHeight = 11.75;
 		 for(var x = 0; x<libraryOfImages.length && x < 24; x++){
 			 //Set the Image
 			 var tempScene = new THREE.Sprite();	
@@ -418,21 +451,25 @@ function init() {
 			 //Set the Card Background Color
 			 //Make the Card Background Black
 			 if(tempScene.material.backgroundColor.trim() == "Black")				 
-				 cardHolder.material = additionalImages[0];
+				 cardHolder.material = create_Black_Card();
 			 //Make the Card Background White
 			 else if(tempScene.material.backgroundColor.trim()  == "White") 
-				 cardHolder.material = additionalImages[1];
-				 
-			 cardHolder.position.set((x%6)*8-20,-10*Math.floor(x/6)+initialHeight-1,-2.1); //xyz
+				 cardHolder.material = create_White_Card();
+			 cardHolder.posX =(x%6)*8-20;	 
+			 cardHolder.posY = -10*Math.floor(x/6)+initialHeight-1;	 
+			 cardHolder.posZ = -2.1;	 
+			 cardHolder.position.set(cardHolder.posX, cardHolder.posY, cardHolder.posZ); //xyz
 			 cardHolder.scale.set(7,9,1);
+			 cardHolder.name = "cardHolder";
 			 imagesOnDisplay.push(cardHolder);
 			 scene.add(imagesOnDisplay[imagesOnDisplay.length-1]);
-			 
+			 objects.push(imagesOnDisplay[imagesOnDisplay.length-1]);
 			 //Add the Character's Name
 			 //console.log(libraryOfImages[x].characterName);
 			 var text = text_creation(libraryOfImages[x].characterName,0,2,0.75);
 			 
 			 text.parameters.font= "115px Arial";
+			 //text.parameters.font= "70px Arial";
 			 text.parameters.fillStyle= "Yellow";
 			 text.position.set((x%6)*8-20,-9.97*Math.floor(x/6)+initialHeight-4.58, -1.9);
 			 text.scale.set(6,1.25,1);
@@ -440,6 +477,59 @@ function init() {
 			 imagesOnDisplay.push(text);
 			 scene.add(imagesOnDisplay[imagesOnDisplay.length-1]);
 		 }
+		 
+		 //Left Siding
+		 var leftSiding = new THREE.Sprite();				 
+		 leftSiding.material = additionalImages[0];
+		 leftSiding.material.color  = new THREE.Color("rgb(23,155,220)");
+		 leftSiding.position.set(-16.25,-16.5,-2.5); //xyz
+		 leftSiding.scale.set(20,20,1);
+		 leftSiding.name = "leftSiding";
+		 leftSiding.style = 1;		 
+		 imagesOnDisplay.push(leftSiding);
+		 scene.add(imagesOnDisplay[imagesOnDisplay.length-1]);
+		 
+		 //Right Siding
+		 var rightSiding = new THREE.Sprite();				 
+		 rightSiding.material = additionalImages[1];
+		 rightSiding.material.color  = new THREE.Color("rgb(220,53,53)");
+		 rightSiding.position.set(16.25,-16.5,-2.5); //xyz
+		 rightSiding.scale.set(20,20,1);
+		 rightSiding.name = "rightSiding";
+		 rightSiding.style = 1;		 
+		 imagesOnDisplay.push(rightSiding);
+		 scene.add(imagesOnDisplay[imagesOnDisplay.length-1]);
+		 
+		 //Left Sides Scoring
+		 for(var x = 0; x < 8; x++){
+			 var score = new THREE.Sprite();
+			 score.material = create_Left_Score();
+			 score.material.color  = new THREE.Color("rgb(255,255,255)");
+			 score.position.set(-22.5+x*2.75, initialHeight + 6.5,-2); //xyz
+			 score.scale.set(1.75, 3.5,1);
+			 score.name = "Left Score "+x;
+			 ScoreBoard.push(score);
+			 scene.add(ScoreBoard[ScoreBoard.length-1]);			 
+		 }
+		 
+		 //Right Sides Scoring
+		 for(var x = 0; x < 8; x++){
+			 var score = new THREE.Sprite();
+			 score.material = create_Right_Score();
+			 score.material.color  = new THREE.Color("rgb(255,255,255)");
+			 score.position.set(22.5-x*2.75, initialHeight + 6.5,-2); //xyz
+			 score.scale.set(1.75, 3.5,1);
+			 score.name = "Right Score "+(7-x);
+			 score.style = 1;		 
+			 ScoreBoard.push(score);
+			 scene.add(ScoreBoard[ScoreBoard.length-1]);			 
+		 }
+		 
+		 
+		 
+		 
+		 //Start the steps
+		 steps = 0;
 	 }
 	 
 	 //
@@ -454,7 +544,71 @@ function init() {
 		 
 	 }
 	 
+	 //Setting the cards 
+	 function divide_cards_into_teams(){
+		 //Help from http://www.color-blindness.com/coblis-color-blindness-simulator/
+		 // "Blue" - Team Aqua
+		 // "Red" - Team Magma
+		 // "Dark Grey" - Civilian 
+		 // "Assassin" - 
+		 var cardsArray= ["Blue","Red","Dark Grey","Assassin" ];
+		 console.log("Cards Array Lengt : "+cardsArray.length);
+		 //cardsArray.push
+		 
+	 }
 	 
+	 //Generate Unique card with a White Background
+	 function create_White_Card(){
+		 //card;
+		 if(saveCardWhiteTexture == null){
+			 var loader = new THREE.TextureLoader();
+			 loader.crossOrigin = true;
+			 saveCardWhiteTexture = loader.load( 'Images/Additional Images/whiteBackground.png' );
+			 saveCardWhiteTexture.minFilter = THREE.LinearFilter;
+		 }
+		 var Cards = new THREE.SpriteMaterial( { map: saveCardWhiteTexture, color: 0xffffff } );
+		 return Cards;
+	 }
+	 
+	 //Generate Unique card with a Black Background
+	 function create_Black_Card(){
+		 //card;
+		 if(saveCardBlackTexture == null){
+			 var loader = new THREE.TextureLoader();
+			 loader.crossOrigin = true;
+			 saveCardBlackTexture = loader.load( 'Images/Additional Images/blackBackground.png' );
+			 saveCardBlackTexture.minFilter = THREE.LinearFilter;
+		 }
+		 var Cards = new THREE.SpriteMaterial( { map: saveCardBlackTexture, color: 0xffffff } );
+		 return Cards;
+	 }
+	  
+	 //Left Score Creation
+	 function create_Left_Score(){
+		 //Score
+		 if(saveLeftScoreTexture == null){
+			 var loader = new THREE.TextureLoader();
+			 loader.crossOrigin = true;
+			 saveLeftScoreTexture = loader.load( 'Images/Additional Images/leftScores.png' );
+			 saveLeftScoreTexture.minFilter = THREE.LinearFilter;
+		 }
+		 var Score = new THREE.SpriteMaterial( { map: saveLeftScoreTexture, color: 0xffffff } );
+		 return Score;
+	 }
+	 
+	 //Right Score Creation
+	 function create_Right_Score(){
+		 //Score
+		 if(saveRightScoreTexture == null){
+			 var loader = new THREE.TextureLoader();
+			 loader.crossOrigin = true;
+			 saveRightScoreTexture = loader.load( 'Images/Additional Images/rightScores.png' );
+			 saveRightScoreTexture.minFilter = THREE.LinearFilter;
+		 }
+		 var Score = new THREE.SpriteMaterial( { map: saveRightScoreTexture, color: 0xffffff } );
+		 return Score;
+	 }
+	  
 	 //Text Creation Function
 	 //Since this is used more than 10 times throughout the code
 	 //I created this function to cut down on the length and effort
