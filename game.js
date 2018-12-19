@@ -95,25 +95,20 @@ function init() {
 			 scene.traverse(function (e) {
 				 if(e.name == "leftSiding" && steps % 25 == 0 && Game_State != "Start"){
 					 if(e.style == 1){
-						 
+						 e.material.color  = new THREE.Color("rgb(50,165,250)");
+						 e.style = 2;
 					 }
 					 else if(e.style == 2){
-						 
-					 }
-					 else if(e.style == 3){
-						 
+						 e.material.color  = new THREE.Color("rgb(23,155,220)");
+						 e.style = 1;
 					 }
 				 }
 				 else if(e.name == "rightSiding" && steps % 25 == 0 && Game_State != "Start"){
 					 if(e.style == 1){
-						 e.material.color  = new THREE.Color("rgb(160,53,53)");
+						 e.material.color  = new THREE.Color("rgb(250,93,93)");
 						 e.style = 2;
 					 }
 					 else if(e.style == 2){
-						 e.material.color  = new THREE.Color("rgb(190,53,53)");
-						 e.style = 3;
-					 }
-					 else if(e.style == 3){
 						 e.material.color  = new THREE.Color("rgb(220,53,53)");
 						 e.style = 1;
 					 }
@@ -127,55 +122,51 @@ function init() {
 		 var dragControls  = new THREE.DragControls( objects, camera, renderer.domElement );
 				
 			 dragControls.addEventListener( 'dragstart', function(event) {
-																			 if (event.object.name == "startButton"){
-																				 PacMania.emit('Player has joined',gameSettingsOptions[0]);
-																				 remove_Game_Settings_Screen();
-																				 removeButton(raButton);
-																				 controllerDirection = "";
-																				 scene.remove(occuranceBar);		 
-																				 scene.remove( occuranceCircle );
-																				 if(scene.getObjectByName('SectionHighlight') != null)
-																					 scene.remove(SectionHighlight);
-																			 }
-																			 else if (event.object.name == "cardHolder"){
-																				 console.log("cardHolder");
-																				 if(Math.floor(Math.random()*2)==0){ // Blue
-																					 event.object.material.color  = new THREE.Color("rgb(23,155,220)");
-																					 
-																					 ScoreBoard[leftScores].material.color  = new THREE.Color("rgb(23,155,220)");
-																					 leftScores ++;						
-																				 }
-																				 else{ // Red
-																					 event.object.material.color  = new THREE.Color("rgb(220,53,53)");
-																					 
-																					 ScoreBoard[ScoreBoard.length - rightScores-1].material.color  = new THREE.Color("rgb(220,53,53)");
-																					 rightScores ++;
-																				 }
-																			 }
-																			 
-																			 //else console.log(event.object);
-																			 //console.log("lol start of drag: ");
-																		 });
-																		 
-			 dragControls.addEventListener( 'drag', function(event)   {
-																			 if(event.object.name == "startButton")
-																				 startButton.position.set(startButton.posX, startButton.posY, startButton.posZ);
-																			 else if (event.object.name == "cardHolder")
-																				 event.object.position.set(event.object.posX, event.object.posY, event.object.posZ);
-																		 });
-																		
-			 dragControls.addEventListener( 'dragend', function(event)   {
-																			 if (event.object.name == "occuranceCircle"){
-																				 //console.log(event.object.position.x);
-																				 event.object.position.y = event.object.posY; 
-																				 gameSettingsOptions[0].fruitOccurance = (16 + event.object.position.x) * 2.5 + 10;
-																			 }
+				 if (event.object.name == "startButton"){
+					 PacMania.emit('Player has joined',gameSettingsOptions[0]);
+					 remove_Game_Settings_Screen();
+					 removeButton(raButton);
+					 controllerDirection = "";
+					 scene.remove(occuranceBar);		 
+					 scene.remove( occuranceCircle );
+					 if(scene.getObjectByName('SectionHighlight') != null)
+						 scene.remove(SectionHighlight);
+				 }
+				 else if (event.object.name == "cardHolder"){
+					 if(Math.floor(Math.random()*2)==0 && leftScores < 8){ // Blue
+						 event.object.material.color  = new THREE.Color("rgb(23,155,220)");
+						 
+						 ScoreBoard[leftScores].material.color  = new THREE.Color("rgb(23,155,220)");
+						 leftScores ++;						
+					 }
+					 else if( rightScores < 8){ // Red
+						 event.object.material.color  = new THREE.Color("rgb(220,53,53)");
+						 
+						 ScoreBoard[ScoreBoard.length + rightScores - 8].material.color  = new THREE.Color("rgb(220,53,53)");
+						 rightScores ++;
+					 }
+				 }
 				 
 				 
+				 //console.log("lol start of drag: ");
 			 });
-																		 
-			 //console.log(dragControls);
-			 //https://www.learnthreejs.com/drag-drop-dragcontrols-mouse/
+			 
+			 dragControls.addEventListener( 'drag', function(event)   {
+				 if(event.object.name == "startButton")
+					 startButton.position.set(startButton.posX, startButton.posY, startButton.posZ);
+				 else if (event.object.name == "cardHolder")
+					 event.object.position.set(event.object.posX, event.object.posY, event.object.posZ);
+			 });
+			 
+			 dragControls.addEventListener( 'dragend', function(event)   {
+				 if (event.object.name == "occuranceCircle"){
+					 //console.log(event.object.position.x);
+					 event.object.position.y = event.object.posY; 
+					 gameSettingsOptions[0].fruitOccurance = (16 + event.object.position.x) * 2.5 + 10;
+				 }
+			 });
+		 //console.log(dragControls);
+		 //https://www.learnthreejs.com/drag-drop-dragcontrols-mouse/
 	 }
 	  
 	 //Load the Start Screens
@@ -321,35 +312,6 @@ function init() {
 		 Imagecover.x = 0;
 		 Imagecover.y = 0;
 		 additionalImages.push(Imagecover);
-	 }
-		 
-	 //Loads all of the images and place them into the libraryOfImages
-	 function load_All_Images(){
-		 //First Clear the libraryOfImages
-		 libraryOfImages=[];
-		 
-		 load_Anime_Images();
-		 //load_Cartoon_Images();
-		 //load_Game_Images();
-		 //load_Additional_Images();
-		 
-		 /**
-		 //Anime
-		 for(var x = 0; x < animeImages.length; x++)
-			 libraryOfImages.push(animeImages[x]);
-		 
-		 //Cartoon
-		 for(var x = 0; x < cartoonImages.length; x++)
-			 libraryOfImages.push(cartoonImages[x]);
-		 
-		 //Game
-		 for(var x = 0; x < gameImages.length; x++)
-			 libraryOfImages.push(gameImages[x]);
-		 **/
-		 
-		 //totalImages = animeImages.length + cartoonImages.length + gameImages.length;
-		 //console.log("Total Images = "+ totalImages);
-		 //displayPlaceHolders();
 	 }
 	  
 	 //Load and a preset the images for use
@@ -538,27 +500,32 @@ function init() {
 		 imagesOnDisplay.push(rightSiding);
 		 scene.add(imagesOnDisplay[imagesOnDisplay.length-1]);
 		 
-		 //Sides Scoring
+		 //Left Sides Scoring
 		 for(var x = 0; x < 8; x++){
-			 var score = create_Left_Score();
+			 var score = new THREE.Sprite();
+			 score.material = create_Left_Score();
 			 score.material.color  = new THREE.Color("rgb(255,255,255)");
-			 score.position.set(-22.5+x*2.75,18.75,-2); //xyz
+			 score.position.set(-22.5+x*2.75, initialHeight + 6.5,-2); //xyz
 			 score.scale.set(1.75, 3.5,1);
 			 score.name = "Left Score "+x;
 			 ScoreBoard.push(score);
 			 scene.add(ScoreBoard[ScoreBoard.length-1]);			 
 		 }
-		 //Sides Scoring
+		 
+		 //Right Sides Scoring
 		 for(var x = 0; x < 8; x++){
-			 var score = create_Right_Score();
+			 var score = new THREE.Sprite();
+			 score.material = create_Right_Score();
 			 score.material.color  = new THREE.Color("rgb(255,255,255)");
-			 score.position.set(22.5-x*2.75,18.75,-2); //xyz
+			 score.position.set(22.5-x*2.75, initialHeight + 6.5,-2); //xyz
 			 score.scale.set(1.75, 3.5,1);
 			 score.name = "Right Score "+(7-x);
 			 score.style = 1;		 
 			 ScoreBoard.push(score);
 			 scene.add(ScoreBoard[ScoreBoard.length-1]);			 
 		 }
+		 
+		 
 		 
 		 
 		 //Start the steps
