@@ -1,4 +1,4 @@
-var socket, Ax = io('/ax', {forceNew:true});
+var socket, Codename = io('/codename', {forceNew:true});
 var tableOfSpies = [], libraryOfImages = [], imagesOnDisplay = [], totalImages = 0;
 var animeImages = [], cartoonImages = [], gameImages = [], additionalImages = [];
 var spriteRatioWidthtoHeight =1, spriteRatioHeighttoWidth=1;
@@ -6,6 +6,7 @@ var Width, Height, Game_State = "Start";
 var startGame, steps = 0, objects = [];
 var leftScores = 0, rightScores = 0, ScoreBoard = [], saveLeftScoreTexture = null, saveRightScoreTexture = null;
 var saveCardWhiteTexture = null, saveCardBlackTexture = null;
+var team1 = null, team2 = null, timer = null, timerSetting = "Off";
 
 function init() {
 	 // create a scene, that will hold all our elements such as objects, cameras and lights.
@@ -29,10 +30,10 @@ function init() {
 	 socket = io.connect('http://localhost:9000');
         
 	 //Insert Data from the Server
-	 Ax.on('Get Data', function(data){
-		 
-		 
-		 
+	 Codename.on('CountDown', function(data){
+		 // console.log(data.Count)
+		 timer.parameters.text = " " + data.Count + " ";
+		 timer.update();		 
 	 });
 	 
 	 //add the output of the renderer to the html element
@@ -122,17 +123,8 @@ function init() {
 		 var dragControls  = new THREE.DragControls( objects, camera, renderer.domElement );
 				
 			 dragControls.addEventListener( 'dragstart', function(event) {
-				 if (event.object.name == "startButton"){
-					 PacMania.emit('Player has joined',gameSettingsOptions[0]);
-					 remove_Game_Settings_Screen();
-					 removeButton(raButton);
-					 controllerDirection = "";
-					 scene.remove(occuranceBar);		 
-					 scene.remove( occuranceCircle );
-					 if(scene.getObjectByName('SectionHighlight') != null)
-						 scene.remove(SectionHighlight);
-				 }
-				 else if (event.object.name == "cardHolder"){
+				 // Card Holders
+				 if (event.object.name == "cardHolder"){
 					 if(Math.floor(Math.random()*2)==0 && leftScores < 8){ // Blue
 						 event.object.material.color  = new THREE.Color("rgb(23,155,220)");
 						 
@@ -146,7 +138,21 @@ function init() {
 						 rightScores ++;
 					 }
 				 }
-				 
+				 // Timer button
+				 else if (event.object.name == "timer"){
+					 if(timerSetting == "Off"){
+						 timerSetting = "On";
+						 // console.log(timerSetting)
+						 Codename.emit('Timer On');
+					 }
+					 else if(timerSetting == "On"){
+						 timerSetting = "Off";
+						 // console.log(timerSetting);
+						 timer.parameters.text = "Timer";
+						 timer.update();		 
+						 Codename.emit('Timer Off');						 
+					 }
+				 }
 				 
 				 //console.log("lol start of drag: ");
 			 });
@@ -155,6 +161,8 @@ function init() {
 				 if(event.object.name == "startButton")
 					 startButton.position.set(startButton.posX, startButton.posY, startButton.posZ);
 				 else if (event.object.name == "cardHolder")
+					 event.object.position.set(event.object.posX, event.object.posY, event.object.posZ);
+				 else if (event.object.name == "timer")
 					 event.object.position.set(event.object.posX, event.object.posY, event.object.posZ);
 			 });
 			 
@@ -434,7 +442,7 @@ function init() {
 		
 	 }
 	  
-	 //
+	 //Go to Game Menu
 	 function displayPlaceHolders(){
 		 var initialHeight = 11.75;
 		 for(var x = 0; x<libraryOfImages.length && x < 24; x++){
@@ -525,9 +533,46 @@ function init() {
 			 scene.add(ScoreBoard[ScoreBoard.length-1]);			 
 		 }
 		 
+		 // Team 1 Name
+		 if(team1 == null){
+			 team1 = text_creation("Team Aqua",1,3,0.75);			 
+			 team1.parameters.font= "125px Arial";
+			 team1.parameters.fillStyle= "#179ADC"; // rgb(23,155,220)
+			 team1.position.set(-19, 24, -2.2);
+			 team1.scale.set(15, 7,1);
+			 team1.update();
+		} 
+		 imagesOnDisplay.push(team1);
+		 scene.add(imagesOnDisplay[imagesOnDisplay.length-1]);	
 		 
-		 
-		 
+		 // Team 2 Name
+		 if(team2 == null){
+			 team2 = text_creation("Team Magma",1,3,0.75);			 
+			 team2.parameters.font= "125px Arial";
+			 team2.parameters.fillStyle= "#DC3535"; // rgb(220,53,53)
+			 team2.position.set(17, 24, -2.2);
+			 team2.scale.set(15, 7,1);
+			 team2.update();
+		 }
+		 imagesOnDisplay.push(team2);
+		 scene.add(imagesOnDisplay[imagesOnDisplay.length-1]);	
+		
+		 // Timer
+		 if(timer == null){
+			 timer = text_creation("Timer",0,2,0.75);			 
+			 timer.parameters.font= "135px Arial";
+			 timer.name = "timer";
+			 timer.parameters.fillStyle= "#ffffff"; // rgb(220,53,53)
+			 timer.posX = 0;	 
+			 timer.posY = initialHeight + 6.75;	 
+			 timer.posZ = -2.2;	 
+			 timer.position.set( timer.posX, timer.posY, timer.posZ);
+			 timer.scale.set(5, 3,1);
+			 timer.update();
+		 }
+		 imagesOnDisplay.push(timer);
+		 scene.add(imagesOnDisplay[imagesOnDisplay.length-1]);	
+		 objects.push(imagesOnDisplay[imagesOnDisplay.length-1]);
 		 //Start the steps
 		 steps = 0;
 	 }
