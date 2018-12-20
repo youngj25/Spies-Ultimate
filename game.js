@@ -1,11 +1,12 @@
-var socket, Ax = io('/ax', {forceNew:true});
-var tableOfSpies = [], libraryOfImages = [], imagesOnDisplay = [], totalImages = 0;
+var socket, Codename = io('/codename', {forceNew:true});
+var cardsTable = [], libraryOfImages = [], imagesOnDisplay = [], totalImages = 0;
 var animeImages = [], cartoonImages = [], gameImages = [], additionalImages = [];
 var spriteRatioWidthtoHeight =1, spriteRatioHeighttoWidth=1;
 var Width, Height, Game_State = "Start";
 var startGame, steps = 0, objects = [];
 var leftScores = 0, rightScores = 0, ScoreBoard = [], saveLeftScoreTexture = null, saveRightScoreTexture = null;
 var saveCardWhiteTexture = null, saveCardBlackTexture = null;
+var team1 = null, team2 = null, timer = null, timerSetting = "Off", timesUp;
 
 function init() {
 	 // create a scene, that will hold all our elements such as objects, cameras and lights.
@@ -29,9 +30,32 @@ function init() {
 	 socket = io.connect('http://localhost:9000');
         
 	 //Insert Data from the Server
-	 Ax.on('Get Data', function(data){
+	 Codename.on('CountDown', function(data) {
+		 // console.log(data.Count)
 		 
+		 if(data.Count <= 60) {
+		 // if(data.Count <= 30){
+			 timer.parameters.text = " " + data.Count + " ";
+			 
+			 if(scene.getObjectByName('timesUp') != null)
+				 scene.remove(timesUp);
+		 }
+		 else {
+			 timer.parameters.text = " ";
+			 if(scene.getObjectByName('timesUp') == null)
+				 scene.add(timesUp);
+		 }
 		 
+		 timer.update();		
+		 
+	 });
+	 
+	 Codename.on('Board', function(data) {
+		 console.log(data);		 
+		 for(var x = 0; x < 24; x++){
+			 cardsTable[x].type= data.Board[x].type;
+			 console.log(x + ". " + cardsTable[x].type);
+		 }
 		 
 	 });
 	 
@@ -122,17 +146,34 @@ function init() {
 		 var dragControls  = new THREE.DragControls( objects, camera, renderer.domElement );
 				
 			 dragControls.addEventListener( 'dragstart', function(event) {
-				 if (event.object.name == "startButton"){
-					 PacMania.emit('Player has joined',gameSettingsOptions[0]);
-					 remove_Game_Settings_Screen();
-					 removeButton(raButton);
-					 controllerDirection = "";
-					 scene.remove(occuranceBar);		 
-					 scene.remove( occuranceCircle );
-					 if(scene.getObjectByName('SectionHighlight') != null)
-						 scene.remove(SectionHighlight);
-				 }
-				 else if (event.object.name == "cardHolder"){
+				 // Card Holders
+				 if (event.object.name == "cardHolder"){
+					 
+					 // Civilian
+					 if(cardsTable[event.object.cardNumber].type == null){ // Yellow
+						 event.object.material.color  = new THREE.Color("rgb(255,255,0)");
+					 }
+					 // Team 1
+					 else if(cardsTable[event.object.cardNumber].type == "Team 1"){ // Blue
+						 event.object.material.color  = new THREE.Color("rgb(23,155,220)");
+						 
+						 ScoreBoard[leftScores].material.color  = new THREE.Color("rgb(23,155,220)");
+						 leftScores ++;						
+					 }
+					 // Team 2
+					 else if(cardsTable[event.object.cardNumber].type == "Team 2"){ // Red
+						 event.object.material.color  = new THREE.Color("rgb(220,53,53)");
+						 
+						 ScoreBoard[ScoreBoard.length + rightScores - 8].material.color  = new THREE.Color("rgb(220,53,53)");
+						 rightScores ++;					
+					 }
+					 // Assassin
+					 else if(cardsTable[event.object.cardNumber].type == "Assassin"){ // Black
+						 event.object.material.color  = new THREE.Color("rgb(23,23,23)");
+					 }
+					 
+					 
+					 /**
 					 if(Math.floor(Math.random()*2)==0 && leftScores < 8){ // Blue
 						 event.object.material.color  = new THREE.Color("rgb(23,155,220)");
 						 
@@ -145,8 +186,24 @@ function init() {
 						 ScoreBoard[ScoreBoard.length + rightScores - 8].material.color  = new THREE.Color("rgb(220,53,53)");
 						 rightScores ++;
 					 }
+					 **/
 				 }
-				 
+				 // Timer button
+				 else if (event.object.name == "timer"){
+					 if(timerSetting == "Off"){
+						 timerSetting = "On";
+						 // console.log(timerSetting)
+						 timer.parameters.text = " 60 ";
+						 Codename.emit('Timer On');
+					 }
+					 else if(timerSetting == "On"){
+						 timerSetting = "Off";
+						 // console.log(timerSetting);
+						 timer.parameters.text = "Timer";
+						 Codename.emit('Timer Off');						 
+					 }
+					 timer.update();		
+				 }
 				 
 				 //console.log("lol start of drag: ");
 			 });
@@ -155,6 +212,8 @@ function init() {
 				 if(event.object.name == "startButton")
 					 startButton.position.set(startButton.posX, startButton.posY, startButton.posZ);
 				 else if (event.object.name == "cardHolder")
+					 event.object.position.set(event.object.posX, event.object.posY, event.object.posZ);
+				 else if (event.object.name == "timer")
 					 event.object.position.set(event.object.posX, event.object.posY, event.object.posZ);
 			 });
 			 
@@ -181,7 +240,22 @@ function init() {
 		 scene.remove(startGame);
 		 Game_State = "Game";
 		 leftScores = 0, rightScores = 0;
+		 cardsTable = [];
+		 for(var x = 0; x < 24; x++){
+			 var card = {
+				 image: null,
+				 text : null,
+				 card : null,
+				 type: null
+			 }
+			 cardsTable.push(card);
+		 }
+		 
 		 fillLibraryOfImages();
+		 var data = {size : 24};
+		 Codename.emit('Start Game', data);
+		 
+		 
 	 }
 	  
 	 //Load Anime Images
@@ -312,6 +386,17 @@ function init() {
 		 Imagecover.x = 0;
 		 Imagecover.y = 0;
 		 additionalImages.push(Imagecover);
+		 
+		 //Time Up's Upload
+		 Texture = loader.load( "Images/Additional Images/Time's Up.png");
+		 Texture.minFilter = THREE.LinearFilter		 
+		 timesUp = new THREE.Sprite();				 
+		 timesUp.material = new THREE.SpriteMaterial( { map: Texture, color: 0xffffff } );
+		 //timesUp.material.color  = new THREE.Color("rgb(255,255,255)");
+		 timesUp.position.set(0, -4, 1.5); //xyz
+		 timesUp.scale.set(38,10,1);
+		 timesUp.name = "timesUp";
+		 
 	 }
 	  
 	 //Load and a preset the images for use
@@ -365,8 +450,8 @@ function init() {
 		 
 		 var listOfRandomImages = [];
 		 
-		 if(totalImages >= 23){
-			 if(totalImages > 23){
+		 if(totalImages >= 24){
+			 if(totalImages > 24){
 				 //Randomly Select Characters
 				 while(listOfRandomImages.length <= 23){
 					 var arrayNumber = Math.floor(Math.random()*totalImages);
@@ -434,10 +519,11 @@ function init() {
 		
 	 }
 	  
-	 //
+	 //Go to Game Menu
 	 function displayPlaceHolders(){
 		 var initialHeight = 11.75;
 		 for(var x = 0; x<libraryOfImages.length && x < 24; x++){
+			 
 			 //Set the Image
 			 var tempScene = new THREE.Sprite();	
 			 tempScene.material = libraryOfImages[x];
@@ -445,6 +531,7 @@ function init() {
 			 tempScene.scale.set(6,8,1);
 			 imagesOnDisplay.push(tempScene);
 			 scene.add(imagesOnDisplay[imagesOnDisplay.length-1]);
+			 cardsTable[x].image = imagesOnDisplay[imagesOnDisplay.length-1];
 			 
 			 //Add the Card
 			 var cardHolder = new THREE.Sprite();				 
@@ -461,9 +548,12 @@ function init() {
 			 cardHolder.position.set(cardHolder.posX, cardHolder.posY, cardHolder.posZ); //xyz
 			 cardHolder.scale.set(7,9,1);
 			 cardHolder.name = "cardHolder";
+			 cardHolder.cardNumber = x;
 			 imagesOnDisplay.push(cardHolder);
 			 scene.add(imagesOnDisplay[imagesOnDisplay.length-1]);
 			 objects.push(imagesOnDisplay[imagesOnDisplay.length-1]);
+			 cardsTable[x].card = imagesOnDisplay[imagesOnDisplay.length-1];
+			 
 			 //Add the Character's Name
 			 //console.log(libraryOfImages[x].characterName);
 			 var text = text_creation(libraryOfImages[x].characterName,0,2,0.75);
@@ -476,6 +566,7 @@ function init() {
 			 text.update();
 			 imagesOnDisplay.push(text);
 			 scene.add(imagesOnDisplay[imagesOnDisplay.length-1]);
+			 cardsTable[x].text = imagesOnDisplay[imagesOnDisplay.length-1];
 		 }
 		 
 		 //Left Siding
@@ -525,9 +616,46 @@ function init() {
 			 scene.add(ScoreBoard[ScoreBoard.length-1]);			 
 		 }
 		 
+		 // Team 1 Name
+		 if(team1 == null){
+			 team1 = text_creation("Team Aqua",1,3,0.75);			 
+			 team1.parameters.font= "125px Arial";
+			 team1.parameters.fillStyle= "#179ADC"; // rgb(23,155,220)
+			 team1.position.set(-19, 24, -2.2);
+			 team1.scale.set(15, 7,1);
+			 team1.update();
+		} 
+		 imagesOnDisplay.push(team1);
+		 scene.add(imagesOnDisplay[imagesOnDisplay.length-1]);	
 		 
-		 
-		 
+		 // Team 2 Name
+		 if(team2 == null){
+			 team2 = text_creation("Team Magma",1,3,0.75);			 
+			 team2.parameters.font= "125px Arial";
+			 team2.parameters.fillStyle= "#DC3535"; // rgb(220,53,53)
+			 team2.position.set(17, 24, -2.2);
+			 team2.scale.set(15, 7,1);
+			 team2.update();
+		 }
+		 imagesOnDisplay.push(team2);
+		 scene.add(imagesOnDisplay[imagesOnDisplay.length-1]);	
+		
+		 // Timer
+		 if(timer == null){
+			 timer = text_creation("Timer",0,2,0.75);			 
+			 timer.parameters.font= "135px Arial";
+			 timer.name = "timer";
+			 timer.parameters.fillStyle= "#ffffff"; // rgb(220,53,53)
+			 timer.posX = 0;	 
+			 timer.posY = initialHeight + 6.75;	 
+			 timer.posZ = -2.2;	 
+			 timer.position.set( timer.posX, timer.posY, timer.posZ);
+			 timer.scale.set(5, 3,1);
+			 timer.update();
+		 }
+		 imagesOnDisplay.push(timer);
+		 scene.add(imagesOnDisplay[imagesOnDisplay.length-1]);	
+		 objects.push(imagesOnDisplay[imagesOnDisplay.length-1]);
 		 //Start the steps
 		 steps = 0;
 	 }
