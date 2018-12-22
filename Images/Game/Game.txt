@@ -30,14 +30,44 @@ FlappyBird.png
 White
 https://gigatap.itch.io/clony-bird
 
+Golden Sun
+Isaac
+Isaac.png
+White
+http://characterrealms.wikia.com/wiki/File:Isaac_Golden_Sun.png
+
+Halo
+Master Chief
+MasterChief.png
+Black
+https://en.wikipedia.org/wiki/Master_Chief_(Halo)
+
+Kingdom Hearts
+Sora
+Kingdom.png
+Black
+https://www.pngarts.com/explore/41945
+
+Luigi's Mansion
+Luigi
+Luigi.png
+Black
+http://mariopartylegacy.com/2013/01/even-more-art-for-luigis-mansion-dark-moon/
+
+Mario
+Waluigi
+Waluigi.png
+Black
+http://fantendo.wikia.com/wiki/File:MTOCG_Waluigi.png
+
 Mario Kart Double Dash
 Baby Mario & Luigi
 Mario_Kart_Double_Dash!!.png
 Black
 http://mario.wikia.com/wiki/File:Babies_and_Chain_Chomp_-_Mario_Kart_Double_Dash!!.png
 
-Megaman
-Megaman
+Mega Man
+Mega Man
 Mega_Man_SSBU.png
 Black
 https://www.ssbwiki.com/Mega_Man_(SSBU)
@@ -47,12 +77,6 @@ Olimar
 Olimar.png
 Black
 https://www.ssbwiki.com/Olimar_(SSBU)
-
-Pokemon
-Blaziken
-Blaziken.png
-White
-https://www.pokemon.com/us/pokedex/blaziken
 
 Rune Factory Frontier
 Cinnamon
@@ -72,6 +96,12 @@ Jigglypuff.png
 Black
 http://pokemon.wikia.com/wiki/Jigglypuff
 
+Sonic the Hedgehog
+Shadow
+Shadow.png
+White
+https://www.pngarts.com/explore/52235
+
 Splatoon
 Inkling
 Inkling.png
@@ -89,6 +119,12 @@ Pauline
 Pauline.png
 White
 http://mario.wikia.com/wiki/Pauline
+
+Tomb Raider
+Lara Croft
+Lara.png
+Black
+https://www.pngarts.com/explore/51061
 
 Xenoblade
 Dunban
