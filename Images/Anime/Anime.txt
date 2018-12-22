@@ -6,11 +6,89 @@ Name of the Image File
 The Background color of the Card
 The Source of the Image
 
+Attack on Titans
+Mikasa
+Mikasa.png
+Black
+https://www.pngarts.com/explore/40395
+
+Baby Steps
+Maruo
+Maruo.png
+White
+http://babysteps.wikia.com/wiki/File:NHK_BSS2_Maruo.png
+
+Bleach
+Kenpachi
+Kenpachi.png
+White
+https://www.kisspng.com/png-kenpachi-zaraki-kusajishi-yachiru-nnoitra-gilga-re-2366531/
+
+Boku no Hero Academia
+Bakugou
+Baku.png
+White
+https://www.reddit.com/r/BokuNoHeroAcademia/comments/6hpmyq/artwork_i_colored_this_bakugou_panel/
+
+Boku no Hero Academia
+Mineta
+Mineta.png
+Black
+http://bokunoheroacademia.wikia.com/wiki/File:Minoru_Mineta_hero_icon_2.png
+
+Code Geass
+Lelouch/Zero
+lelouch.png
+White
+https://www.srwmush.com/index.php?title=Lelouch_vi_Britannia
+
+Cowboy Bebop
+Spike
+spike.png
+White
+http://cowboybebop.wikia.com/wiki/File:Spike_Profile_Cut.png
+
+Death Note
+L
+L.png
+White
+http://halo.wikia.com/wiki/File:USER_Death_Note_L_render.png
+
+Detective Conan
+Kaito Kid
+kaito.png
+White
+https://pngimage.net/kaito-kid-png-9/
+
 Dragon Ball
-Master_Roshi
+Goku
+Goku.png
+Black
+http://dragonball.wikia.com/wiki/File:Kid_Goku_1.png
+
+Dragon Ball Z
+Master Roshi
 Master_roshi.png
 Black
 http://rebloggy.com/mine+transparent+Dragonball+Z+Master+Roshi+bdz/search/bestmatch/page/1
+
+Eyeshield 21
+Hiruma
+hiruma.png
+White
+https://myanimelist.net/forum/?topicid=301942&show=380
+
+Full Metal Alchemist Brotherhood
+Roy
+Roy.png
+White
+http://vsbattles.wikia.com/wiki/File:Roy_Mustang_Render.png
+
+Fuuka
+Fuuka
+fuuka.png
+White
+http://fuukaakitsuki.wikia.com/wiki/File:Fuuka_in_Anime.jpg
 
 Gintama
 Shinpachi
@@ -24,17 +102,77 @@ ippo.png
 Black
 http://personal.cablemas.com/lagartija/images/anime/
 
+Hunter X Hunter
+Hisoka
+Hisoka.png
+Black
+http://hunterxonline.wikia.com/wiki/File:Hisoka.png
+
 Jojo
 Jonathan
 Jonathan.png
 White
 http://jojo.wikia.com/wiki/File:Jonathan_jojoeoh.png
 
+K-ON!!
+Yui
+Yui.png
+Black
+http://smashbroslawlorigins.wikia.com/wiki/Yui_Hirasawa
+
+Katekyo Hitman Reborn
+Tsuna
+tsuna.png
+Black
+http://reborn.wikia.com/wiki/Hyper_Dying_Will_Mode
+
+Kenichi: History Strongest Disciple
+Kenichi
+Kenichi.png
+White
+http://vsbattles.wikia.com/wiki/Kenichi_Shirahama
+
+Little Witch Academia
+Akko
+Akko.png
+White
+http://little-witch-academia.wikia.com/wiki/Atsuko_Kagari
+
 Naruto
 Jiraiya
 jiraiya.png
 Black
 https://www.ign.com/articles/2008/02/25/naruto-the-three-villains-from-the-maximum-security-prison-review
+
+One Punch Man
+Genos
+genos.png
+White
+https://wall.alphacoders.com/big.php?i=673963&lang=Swedish
+
+Pokemon
+Blaziken
+Blaziken.png
+White
+https://www.pokemon.com/us/pokedex/blaziken
+
+Samurai Champloo
+Mugen
+mugen.png
+White
+http://universe-of-smash-bros-lawl.wikia.com/wiki/Mugen_(Samurai_Champloo)
+
+Steins; Gate
+Kurisu
+kurisa.png
+White
+https://www.kisspng.com/png-kurisu-makise-steinsgate-rintarou-okabe-mayuri-shi-5967475/
+
+Sword Art Online
+Kirito
+kirito.png
+White
+https://www.kisspng.com/png-sword-art-online-hollow-realization-sword-art-onli-103787/
 
 Your Lie in April
 Kousei
@@ -49,7 +187,13 @@ White
 https://twitter.com/grossmidousuji/status/774347987199877120
 
 Yu-Gi-Oh
-Dark_Magician_Girl
+Dark Magician Girl
 Dark_Magician_Girl.png
 Black
 https://www.deviantart.com/yugiohdragon999/art/Dark-Magician-Girl-Render-713329782
+
+Zoids
+Liger Zero
+zoids.png
+Black
+http://fictional-battle-omniverse.wikia.com/wiki/Liger_Zero
