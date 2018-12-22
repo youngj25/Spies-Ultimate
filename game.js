@@ -1,12 +1,14 @@
 var socket, Codename = io('/codename', {forceNew:true});
-var tableOfSpies = [], libraryOfImages = [], imagesOnDisplay = [], totalImages = 0;
+var cardsTable = [], libraryOfImages = [], imagesOnDisplay = [], totalImages = 0;
 var animeImages = [], cartoonImages = [], gameImages = [], additionalImages = [];
 var spriteRatioWidthtoHeight =1, spriteRatioHeighttoWidth=1;
 var Width, Height, Game_State = "Start";
-var startGame, steps = 0, objects = [];
+var startGame, about, categories=[], steps = 0, objects = [];
+var credits, seriesTitle, characterName, imageSource;
 var leftScores = 0, rightScores = 0, ScoreBoard = [], saveLeftScoreTexture = null, saveRightScoreTexture = null;
 var saveCardWhiteTexture = null, saveCardBlackTexture = null;
-var team1 = null, team2 = null, timer = null, timerSetting = "Off";
+var team1 = null, team2 = null, timer = null, timerSetting = "Off", timesUp;
+var sectionTitle, cardText, returnToStartScreen;
 
 function init() {
 	 // create a scene, that will hold all our elements such as objects, cameras and lights.
@@ -30,10 +32,33 @@ function init() {
 	 socket = io.connect('http://localhost:9000');
         
 	 //Insert Data from the Server
-	 Codename.on('CountDown', function(data){
+	 Codename.on('CountDown', function(data) {
 		 // console.log(data.Count)
-		 timer.parameters.text = " " + data.Count + " ";
-		 timer.update();		 
+		 
+		 if(data.Count <= 60) {
+		 // if(data.Count <= 30){
+			 timer.parameters.text = " " + data.Count + " ";
+			 
+			 if(scene.getObjectByName('timesUp') != null)
+				 scene.remove(timesUp);
+		 }
+		 else {
+			 timer.parameters.text = " ";
+			 if(scene.getObjectByName('timesUp') == null)
+				 scene.add(timesUp);
+		 }
+		 
+		 timer.update();		
+		 
+	 });
+	 
+	 Codename.on('Board', function(data) {
+		 console.log(data);		 
+		 for(var x = 0; x < 24; x++){
+			 cardsTable[x].type= data.Board[x].type;
+			 console.log(x + ". " + cardsTable[x].type);
+		 }
+		 
 	 });
 	 
 	 //add the output of the renderer to the html element
@@ -41,9 +66,7 @@ function init() {
 	 
 	 //Keyboard Functions
 	 function onKeyDown(event) {
-		 if (event.keyCode == 32 && Game_State == "Start") // Spacebar
-			 go_to_Game_Board();
-		 else if(event.keyCode == 32 && Game_State != "Start"){
+		 if(event.keyCode == 32 && Game_State == "Game"){
 			 //Clear the Scene
 			 while(imagesOnDisplay.length >=1){
 				 scene.remove(imagesOnDisplay[0]);
@@ -62,9 +85,7 @@ function init() {
 			 }
 			 
 			 libraryOfImages = [];
-			 scene.add(startGame);
-			 Game_State = "Start";
-			 
+			 load_Start_Screen();			 
 		 }
 	 }; 
 	 document.addEventListener('keydown', onKeyDown, false);
@@ -125,6 +146,31 @@ function init() {
 			 dragControls.addEventListener( 'dragstart', function(event) {
 				 // Card Holders
 				 if (event.object.name == "cardHolder"){
+					 
+					 // Civilian
+					 if(cardsTable[event.object.cardNumber].type == null){ // Yellow
+						 event.object.material.color  = new THREE.Color("rgb(255,255,0)");
+					 }
+					 // Team 1
+					 else if(cardsTable[event.object.cardNumber].type == "Team 1"){ // Blue
+						 event.object.material.color  = new THREE.Color("rgb(23,155,220)");
+						 
+						 ScoreBoard[leftScores].material.color  = new THREE.Color("rgb(23,155,220)");
+						 leftScores ++;						
+					 }
+					 // Team 2
+					 else if(cardsTable[event.object.cardNumber].type == "Team 2"){ // Red
+						 event.object.material.color  = new THREE.Color("rgb(220,53,53)");
+						 ScoreBoard[ScoreBoard.length + rightScores - 8].material.color  = new THREE.Color("rgb(220,53,53)");
+						 rightScores ++;					
+					 }
+					 // Assassin
+					 else if(cardsTable[event.object.cardNumber].type == "Assassin"){ // Black
+						 event.object.material.color  = new THREE.Color("rgb(23,23,23)");
+					 }
+					 
+					 
+					 /**
 					 if(Math.floor(Math.random()*2)==0 && leftScores < 8){ // Blue
 						 event.object.material.color  = new THREE.Color("rgb(23,155,220)");
 						 
@@ -137,33 +183,127 @@ function init() {
 						 ScoreBoard[ScoreBoard.length + rightScores - 8].material.color  = new THREE.Color("rgb(220,53,53)");
 						 rightScores ++;
 					 }
+					 **/
 				 }
 				 // Timer button
 				 else if (event.object.name == "timer"){
 					 if(timerSetting == "Off"){
 						 timerSetting = "On";
 						 // console.log(timerSetting)
+						 timer.parameters.text = " 60 ";
 						 Codename.emit('Timer On');
 					 }
 					 else if(timerSetting == "On"){
 						 timerSetting = "Off";
 						 // console.log(timerSetting);
 						 timer.parameters.text = "Timer";
-						 timer.update();		 
 						 Codename.emit('Timer Off');						 
 					 }
+					 timer.update();		
 				 }
+				 // Credits button
+				 else if (event.object.name == "Credits"){
+					 //Clear the clickable/draggable objects
+					 while(objects.length >=1){
+						 objects.shift();
+					 }
+					 
+					 go_to_Credit_Screen();
+				 }
+				 // About button
+				 else if(event.object.name == "About"){
+					 //Clear the clickable/draggable objects
+					 while(objects.length >=1){
+						 objects.shift();
+					 }
+					 
+					 go_to_About_Screen();					 
+				 }
+				 
+				 // Start Game button
+				 else if (event.object.name == "Start Game"){
+					 //Clear the clickable/draggable objects
+					 while(objects.length >=1){
+						 objects.shift();
+					 }
+					 
+					 go_to_Game_Board();
+				 }
+				 //Return
+				 else if (event.object.name == "Return"){
+					 scene.remove(sectionTitle);
+					 scene.remove(seriesTitle);
+					 scene.remove(characterName);
+					 scene.remove(imageSource);
+					 scene.remove(cardText);
+					 
+					 //Clear the clickable/draggable objects
+					 while(objects.length >=1){
+						 objects.shift();
+					 }
+					 
+					 // Correct categories
+					 if(Game_State == "Credits"){					
+
+						 categories[0].parameters.font= "135px Arial";
+						 categories[0].position.y = categories[0].position.y+8;
+						 categories[0].position.x = categories[0].position.x +16.5;
+						 categories[0].update();
+					 
+						 for(var x = 1; x < categories.length; x++){
+							 categories[x].credits = false;
+							 categories[x].posY =  categories[x].posY +7;
+							 categories[x].position.y = categories[x].posY;
+							 categories[x].parameters.font= "135px Arial";
+							 categories[x].update();
+						 }
+					 }
+					 
+					 // Return to Start Screen
+					 scene.remove(returnToStartScreen);
+					 load_Start_Screen();
+				 }
+				 // Animes Categories
+				 else if(event.object.name == "anime"){
+					 // Change the Text Color
+					 if(anime.includeCards == true)
+						 anime.parameters.fillStyle= "#552020";
+					 else
+						 anime.parameters.fillStyle= "Crimson";
+					 
+					 anime.includeCards = !anime.includeCards;
+					 anime.update();
+				 }
+				 // Cartoons Categories
+				 else if(event.object.name == "cartoon"){
+					 // Change the Text Color
+					 if(cartoon.includeCards == true)
+						 cartoon.parameters.fillStyle= "#533200";
+					 else
+						 cartoon.parameters.fillStyle= "orangered";
+					 
+					 cartoon.includeCards = !cartoon.includeCards;
+					 cartoon.update();
+				 }
+				 // Games Categories
+				 else if(event.object.name == "game"){
+					 // Change the Text Color
+					 if(game.includeCards == true)
+						 game.parameters.fillStyle= "#003300";
+					 else
+						 game.parameters.fillStyle= "Lime";
+					 
+					 game.includeCards = !game.includeCards;
+					 game.update();
+				 }
+				 
+				 
 				 
 				 //console.log("lol start of drag: ");
 			 });
 			 
 			 dragControls.addEventListener( 'drag', function(event)   {
-				 if(event.object.name == "startButton")
-					 startButton.position.set(startButton.posX, startButton.posY, startButton.posZ);
-				 else if (event.object.name == "cardHolder")
-					 event.object.position.set(event.object.posX, event.object.posY, event.object.posZ);
-				 else if (event.object.name == "timer")
-					 event.object.position.set(event.object.posX, event.object.posY, event.object.posZ);
+				 event.object.position.set(event.object.posX, event.object.posY, event.object.posZ);
 			 });
 			 
 			 dragControls.addEventListener( 'dragend', function(event)   {
@@ -173,23 +313,127 @@ function init() {
 					 gameSettingsOptions[0].fruitOccurance = (16 + event.object.position.x) * 2.5 + 10;
 				 }
 			 });
+		 
 		 //console.log(dragControls);
 		 //https://www.learnthreejs.com/drag-drop-dragcontrols-mouse/
 	 }
 	  
-	 //Load the Start Screens
+	 // Load the Start Screens
 	 function load_Start_Screen(){
+		 // Start Game
 		 scene.add(startGame);
+		 objects.push(startGame);
+		 
+		 // Credits
+		 scene.add(credits);
+		 objects.push(credits);
+		 
+		 // About Game
+		 scene.add(about);
+		 objects.push(about)
+		 
+		 // Categories
+		 // The Categories Title
+		 scene.add(categories[0]);
+		 // The Categories 
+		 for(var x = 1; x < categories.length; x++){
+			 scene.add(categories[x]);
+			 objects.push(categories[x]);
+		 }
+		 
 		 Game_State = "Start";		
 		 steps = 0;		 
 	 }
 	 
+	 // Load the Credits Screens
+	 function go_to_Credit_Screen(){
+		 Game_State = "Credits";		
+		 scene.remove(startGame);
+		 scene.remove(credits);
+		 scene.remove(about);
+		 
+		 sectionTitle.parameters.text= "Credits:";
+		 sectionTitle.parameters.fillStyle= "Gold";
+		 sectionTitle.update();
+		 scene.add(sectionTitle);
+		 scene.add(seriesTitle);
+		 scene.add(characterName);
+		 scene.add(imageSource);
+		 //scene.add(cardText);
+		 
+		 // categories
+		 categories[0].parameters.font= "90px Arial";
+		 categories[0].position.y = categories[0].position.y -8;
+		 categories[0].position.x = categories[0].position.x -16.5;
+		 categories[0].update();
+		 
+		 for(var x = 1; x < categories.length; x++){
+			 categories[x].credits = false;
+			 categories[x].posY =  categories[x].posY -7;
+			 categories[x].position.y = categories[x].posY;
+			 categories[x].parameters.font= "105px Arial";
+			 categories[x].update();
+		 }
+		 categories[1].credits = true;
+		 
+		 // Return to Start Screen
+		 scene.add(returnToStartScreen);
+		 objects.push(returnToStartScreen);
+		 
+	 }
+	 
+	  // Load the Credits Screens
+	 function go_to_About_Screen(){
+		 
+		 scene.remove(startGame);
+		 scene.remove(credits);
+		 scene.remove(about);
+		 
+		 sectionTitle.parameters.text= "About";
+		 sectionTitle.parameters.fillStyle= "#4169E1";
+		 sectionTitle.update();
+		 
+		 scene.add(sectionTitle);
+		 scene.add(cardText);
+		 
+		 // categories
+		 for(var x = 0; x < categories.length; x++)
+			 scene.remove(categories[x]);
+		 
+		 // Return to Start Screen
+		 scene.add(returnToStartScreen);
+		 objects.push(returnToStartScreen);
+		 
+	 }
+	  
 	 //Go to the Game Board
 	 function go_to_Game_Board(){
 		 scene.remove(startGame);
+		 scene.remove(credits);
+		 scene.remove(about);
+		 
+		 // categories
+		 for(var x = 0; x < categories.length; x++)
+			 scene.remove(categories[x]);		 
+		 
 		 Game_State = "Game";
 		 leftScores = 0, rightScores = 0;
+		 cardsTable = [];
+		 for(var x = 0; x < 24; x++){
+			 var card = {
+				 image: null,
+				 text : null,
+				 card : null,
+				 type: null
+			 }
+			 cardsTable.push(card);
+		 }
+		 
 		 fillLibraryOfImages();
+		 var data = {size : 24};
+		 Codename.emit('Start Game', data);
+		 
+		 
 	 }
 	  
 	 //Load Anime Images
@@ -320,6 +564,19 @@ function init() {
 		 Imagecover.x = 0;
 		 Imagecover.y = 0;
 		 additionalImages.push(Imagecover);
+		 
+		 //Time Up's Upload
+		 Texture = loader.load( "Images/Additional Images/Time's Up.png");
+		 Texture.minFilter = THREE.LinearFilter		 
+		 timesUp = new THREE.Sprite();				 
+		 timesUp.material = new THREE.SpriteMaterial( { map: Texture, color: 0xffffff } );
+		 //timesUp.material.color  = new THREE.Color("rgb(255,255,255)");
+		 timesUp.position.set(0, -4, 1.5); //xyz
+		 timesUp.scale.set(38,10,1);
+		 timesUp.name = "timesUp";
+		 
+		 
+		 
 	 }
 	  
 	 //Load and a preset the images for use
@@ -358,23 +615,33 @@ function init() {
 		 return Imagecover;
 	 }
 	 
-	 //
+	 // Fills the Library of Cards for the Chosen Categories
 	 function fillLibraryOfImages(){
-
-		 
 		 // I have an additional section size here because at times a player may not want a section...
 		 // in other words, setting it to zero
-		 animeSize = animeImages.length;
-		 cartoonSize = cartoonImages.length;
-		 gameSize = gameImages.length;
+		 
+		 //Animes		 
+		 animeSize = 0;
+		 if(anime.includeCards)
+			 animeSize = animeImages.length;
+		 
+		 //Cartoons
+		 cartoonSize = 0;
+		 if(cartoon.includeCards)
+			 cartoonSize = cartoonImages.length;
+		 
+		 //Games
+		 gameSize = 0;
+		 if(game.includeCards)
+			 gameSize = gameImages.length;
 		 
 		 //First get a tally of all applicable Images
 		 var totalImages = animeSize + cartoonSize + gameSize;
 		 
 		 var listOfRandomImages = [];
 		 
-		 if(totalImages >= 23){
-			 if(totalImages > 23){
+		 if(totalImages >= 24){
+			 if(totalImages > 24){
 				 //Randomly Select Characters
 				 while(listOfRandomImages.length <= 23){
 					 var arrayNumber = Math.floor(Math.random()*totalImages);
@@ -442,10 +709,11 @@ function init() {
 		
 	 }
 	  
-	 //Go to Game Menu
+	 //Displays the Cards on the Table from the Library
 	 function displayPlaceHolders(){
 		 var initialHeight = 11.75;
 		 for(var x = 0; x<libraryOfImages.length && x < 24; x++){
+			 
 			 //Set the Image
 			 var tempScene = new THREE.Sprite();	
 			 tempScene.material = libraryOfImages[x];
@@ -453,6 +721,7 @@ function init() {
 			 tempScene.scale.set(6,8,1);
 			 imagesOnDisplay.push(tempScene);
 			 scene.add(imagesOnDisplay[imagesOnDisplay.length-1]);
+			 cardsTable[x].image = imagesOnDisplay[imagesOnDisplay.length-1];
 			 
 			 //Add the Card
 			 var cardHolder = new THREE.Sprite();				 
@@ -469,14 +738,28 @@ function init() {
 			 cardHolder.position.set(cardHolder.posX, cardHolder.posY, cardHolder.posZ); //xyz
 			 cardHolder.scale.set(7,9,1);
 			 cardHolder.name = "cardHolder";
+			 cardHolder.cardNumber = x;
 			 imagesOnDisplay.push(cardHolder);
 			 scene.add(imagesOnDisplay[imagesOnDisplay.length-1]);
 			 objects.push(imagesOnDisplay[imagesOnDisplay.length-1]);
+			 cardsTable[x].card = imagesOnDisplay[imagesOnDisplay.length-1];
+			 
 			 //Add the Character's Name
 			 //console.log(libraryOfImages[x].characterName);
 			 var text = text_creation(libraryOfImages[x].characterName,0,2,0.75);
 			 
-			 text.parameters.font= "115px Arial";
+			 var fontSize = (text.parameters.text.length-8);
+			 //console.log(text.parameters.text+ " - "+fontSize);
+			 if(fontSize <= 0)
+				 text.parameters.font= "115px Arial";
+			 else{
+				 text.parameters.lineHeight=0.75 - fontSize*0.025;
+				 fontSize = 115 - (fontSize*4);
+				 text.parameters.font= fontSize+"px Arial";				  
+				 console.log( text.parameters.lineWidth)
+			 }
+			 
+			 
 			 //text.parameters.font= "70px Arial";
 			 text.parameters.fillStyle= "Yellow";
 			 text.position.set((x%6)*8-20,-9.97*Math.floor(x/6)+initialHeight-4.58, -1.9);
@@ -484,6 +767,7 @@ function init() {
 			 text.update();
 			 imagesOnDisplay.push(text);
 			 scene.add(imagesOnDisplay[imagesOnDisplay.length-1]);
+			 cardsTable[x].text = imagesOnDisplay[imagesOnDisplay.length-1];
 		 }
 		 
 		 //Left Siding
@@ -577,15 +861,170 @@ function init() {
 		 steps = 0;
 	 }
 	 
-	 //
+	 // Load Text
 	 function load_Text_and_Buttons(){
+		 // Start Game
 		 startGame = text_creation( "Start Game", 0, 3, 0.8);
 		 startGame.parameters.font= "135px Arial";
 		 startGame.parameters.fillStyle= "White";
-		 startGame.position.set(0,-8, -1.9);
-		 startGame.scale.set(14,3,1);
-		 startGame.name = " Start Game";
+		 startGame.posX = 0;
+		 startGame.posY =  -10;
+		 startGame.posZ = -1.9;
+		 startGame.position.set( startGame.posX, startGame.posY, startGame.posZ);
+		 startGame.scale.set(23,5,1);
+		 startGame.name = "Start Game";
 		 startGame.update();
+		 
+		 // Credits ----------------------
+		 credits = text_creation( "Credits", 0, 3, 0.8);
+		 credits.parameters.font= "135px Arial";
+		 credits.parameters.fillStyle= "Gold";
+		 credits.posX = 19;
+		 credits.posY =  -22;
+		 credits.posZ=  -2;
+		 credits.position.set( credits.posX, credits.posY, credits.posZ);
+		 credits.scale.set(14,3,1);
+		 credits.name = "Credits";
+		 credits.update();		 
+		 //Series Title
+		 seriesTitle = text_creation( "Series: abcdefghijklmnopqrstuvwxyz", 0, 4, 0.68);
+		 seriesTitle.parameters.font= "105px Arial";
+		 seriesTitle.parameters.fillStyle= "White";
+		 seriesTitle.posX = -2;
+		 seriesTitle.posY =  -16;
+		 seriesTitle.posZ=  -2;
+		 seriesTitle.position.set( seriesTitle.posX, seriesTitle.posY, seriesTitle.posZ);
+		 seriesTitle.scale.set(24,3.5,1);
+		 seriesTitle.name = "seriesTitle";
+		 seriesTitle.update();		 
+		 //Character Name
+		 characterName = text_creation( "abcdefghijklmnopqrstuvwxyz", 0, 4, 0.68);
+		 characterName.parameters.font= "120px Arial";
+		 characterName.parameters.fillStyle= "White";
+		 characterName.posX = 0;
+		 characterName.posY =  -12;
+		 characterName.posZ=  -2;
+		 characterName.position.set( characterName.posX, characterName.posY, characterName.posZ);
+		 characterName.scale.set(24,3.5,1);
+		 characterName.name = "characterName";
+		 characterName.update();
+		 //Image Spurce
+		 imageSource = text_creation( "Link to Image Source", 0, 4, 0.68);
+		 imageSource.parameters.font= "100px Arial";
+		 imageSource.parameters.fillStyle= "palegoldenrod";
+		 imageSource.posX = 19;
+		 imageSource.posY =  -22;
+		 imageSource.posZ=  -2;
+		 imageSource.position.set( imageSource.posX, imageSource.posY, imageSource.posZ);
+		 imageSource.scale.set(24,3.5,1);
+		 imageSource.name = "imageSource";
+		 imageSource.update();		 		 
+		 
+		 // About
+		 about = text_creation( "About", 0, 3, 0.8);
+		 about.parameters.font= "135px Arial";
+		 about.parameters.fillStyle= "#4169E1";
+		 about.posX = -19;
+		 about.posY =  -22;
+		 about.posZ=  -2;
+		 about.position.set( about.posX, about.posY, about.posZ);
+		 about.scale.set(14,3,1);
+		 about.name = "About";
+		 about.update();		 
+		 
+		 // Section Title
+		 sectionTitle = text_creation( "Credits:", 0, 3, 0.8);
+		 sectionTitle.parameters.font= "135px Arial";
+		 sectionTitle.parameters.fillStyle= "Gold";
+		 sectionTitle.position.set(-19.5, 22, -1.9);
+		 sectionTitle.scale.set(23,5,1);
+		 sectionTitle.name = "sectionTitle";
+		 sectionTitle.update();		
+		 
+		 // Card
+		 
+		 
+		 // Card Text
+		 cardText = text_creation( "...", 0, 3, 0.8);
+		 cardText.parameters.font= "135px Arial";
+		 cardText.parameters.fillStyle= "White";
+		 cardText.position.set(0, -10, -1.9);
+		 cardText.scale.set(23,5,1);
+		 cardText.name = "Card Text";
+		 cardText.update();				 
+		 
+		 // Return to Start Screen
+		 returnToStartScreen = text_creation( "Return to Start Screen", 0, 3, 0.8);
+		 returnToStartScreen.parameters.font= "115px Arial";
+		 returnToStartScreen.parameters.fillStyle= "White";
+		 returnToStartScreen.posX = -19;
+		 returnToStartScreen.posY =  -22;
+		 returnToStartScreen.posZ=  -2;
+		 returnToStartScreen.position.set( returnToStartScreen.posX, returnToStartScreen.posY, returnToStartScreen.posZ);
+		 returnToStartScreen.scale.set(14,3,1);
+		 returnToStartScreen.name = "Return";
+		 returnToStartScreen.update();		 
+		 
+		 
+		 //Fills categories
+		 categories = [];
+		 // Categories Title
+		 Categories = text_creation( "Categories:", 0, 3, 0.67);
+		 Categories.parameters.font= "135px Arial";
+		 Categories.parameters.fillStyle= "White";
+		 Categories.position.set( 0, 22, -2);
+		 Categories.scale.set(23,5,1);
+		 Categories.name = "Categories";
+		 Categories.update();
+		 categories.push(Categories);
+		 
+		 // Anime
+		 anime = text_creation( "Animes", 0, 3, 0.7);
+		 anime.parameters.font= "135px Arial";
+		 anime.parameters.fillStyle= "Crimson";
+		 anime.posX = -18;
+		 anime.posY =  17;
+		 anime.posZ = -2;
+		 anime.position.set( anime.posX, anime.posY, anime.posZ);
+		 anime.scale.set(14,3,1);
+		 anime.name = "anime";
+		 anime.includeCards = true;
+		 anime.credits = true;
+		 anime.update();
+		 categories.push(anime);
+		 
+		 // Cartoon
+		 cartoon = text_creation( "Cartoons", 0, 3, 0.7);
+		 cartoon.parameters.font= "135px Arial";
+		 cartoon.parameters.fillStyle= "orangered";
+		 cartoon.posX = 0;
+		 cartoon.posY =  17;
+		 cartoon.posZ = -2;
+		 cartoon.position.set( cartoon.posX, cartoon.posY, cartoon.posZ);
+		 cartoon.scale.set(14,3,1);
+		 cartoon.name = "cartoon";
+		 cartoon.includeCards = true;
+		 cartoon.credits = true;
+		 cartoon.update();
+		 categories.push(cartoon);
+		 
+		 // Games
+		 game = text_creation( "Games", 0, 3, 0.7);
+		 game.parameters.font= "135px Arial";
+		 game.parameters.fillStyle= "Lime";
+		 game.posX = 18;
+		 game.posY =  17;
+		 game.posZ = -2;
+		 game.position.set( game.posX, game.posY, game.posZ);
+		 game.scale.set(14,3,1);
+		 game.name = "game";
+		 game.includeCards = true;
+		 game.credits = true;
+		 game.update();
+		 categories.push(game);
+		 
+		 
+		 
 		 
 	 }
 	 
