@@ -5,6 +5,7 @@ var spriteRatioWidthtoHeight =1, spriteRatioHeighttoWidth=1;
 var Width, Height, Game_State = "Start";
 var startGame, about, categories=[], steps = 0, objects = [];
 var credits, seriesTitle, characterName, imageSource , creditsCard = null, creditsImage = null, creditsScrollCircle= null, creditsScrollSection = null;
+
 var leftScores = 0, rightScores = 0, ScoreBoard = [], saveLeftScoreTexture = null, saveRightScoreTexture = null;
 var saveCardWhiteTexture = null, saveCardBlackTexture = null;
 var team1 = null, team2 = null, timer = null, timerSetting = "Off", timesUp;
@@ -47,9 +48,7 @@ function init() {
 			 if(scene.getObjectByName('timesUp') == null)
 				 scene.add(timesUp);
 		 }
-		 
 		 timer.update();		
-		 
 	 });
 	 
 	 Codename.on('Board', function(data) {
@@ -77,13 +76,12 @@ function init() {
 			 while(objects.length >=1){
 				 objects.shift();
 			 }
-			 
+
 			 //Clear the Score Board
 			 while(ScoreBoard.length >=1){
 				 scene.remove(ScoreBoard[0]);
 				 ScoreBoard.shift();
 			 }
-			 
 			 libraryOfImages = [];
 			 load_Start_Screen();			 
 		 }
@@ -146,6 +144,7 @@ function init() {
 			 dragControls.addEventListener( 'dragstart', function(event) {
 				 // Card Holders
 				 if (event.object.name == "cardHolder" && event.object.revealed == false){
+
 					 
 					 // Civilian
 					 if(cardsTable[event.object.cardNumber].type == null){ // Yellow
@@ -153,7 +152,8 @@ function init() {
 					 }
 					 // Team 1
 					 else if(cardsTable[event.object.cardNumber].type == "Team 1"){ // Blue
-						 event.object.material.color  = new THREE.Color("rgb(23,155,220)");						 
+						 event.object.material.color  = new THREE.Color("rgb(23,155,220)");		
+						 event.object.material.color  = new THREE.Color("rgb(23,155,220)");
 						 ScoreBoard[leftScores].material.color  = new THREE.Color("rgb(23,155,220)");
 						 leftScores ++;						
 					 }
@@ -218,6 +218,7 @@ function init() {
 					 
 					 go_to_About_Screen();					 
 				 }
+
 				 // Start Game button
 				 else if (event.object.name == "Start Game"){
 					 //Clear the clickable/draggable objects
@@ -227,7 +228,9 @@ function init() {
 					 
 					 go_to_Game_Board();
 				 }
+
 				 // Return
+
 				 else if (event.object.name == "Return"){
 					 scene.remove(sectionTitle);
 					 scene.remove(seriesTitle);
@@ -242,6 +245,7 @@ function init() {
 					 for(var x= 0; x< creditsScrollSection.length; x++){
 						 scene.remove(creditsScrollSection[x]);
 					 }
+
 					 
 					 //Clear the clickable/draggable objects
 					 while(objects.length >=1){
@@ -341,7 +345,7 @@ function init() {
 							 creditsScrollCircle.position.y = 5; 							 
 						 }
 					 }
-					 
+
 					 anime.update();
 				 }
 				 // Cartoons Categories
@@ -568,7 +572,6 @@ function init() {
 				 
 				 }
 				 
-				 
 				 //console.log("lol start of drag: ");
 			 });
 			 
@@ -648,7 +651,7 @@ function init() {
 			 scene.add(categories[x]);
 			 objects.push(categories[x]);
 		 }
-		 
+     
 		 // Updates the Color Selections
 		 // Anime
 		 if(anime.includeCards != true)
@@ -863,7 +866,6 @@ function init() {
 		 objects.push(returnToStartScreen);
 		 
 	 }
-	  
 	 // Go to the Game Board
 	 function go_to_Game_Board(){
 		 scene.remove(startGame);
@@ -1000,7 +1002,7 @@ function init() {
 				 console.log("Games Loaded - "+gameImages.length+" images");
 		 });	 
 	 }
-	 
+
 	 // Load Additional Images
 	 function load_Additional_Images(){
 		 //Loading Additional Images from the File
@@ -1166,7 +1168,6 @@ function init() {
 		
 		
 	 }
-	  
 	 //Displays the Cards on the Table from the Library
 	 function displayPlaceHolders(){
 		 var initialHeight = 11.75;
@@ -1349,7 +1350,7 @@ function init() {
 		 seriesTitle = text_creation( "Series: abcdefghijklmnopqrstuvwxyz", 0, 4, 0.68);
 		 seriesTitle.parameters.font= "105px Arial";
 		 seriesTitle.parameters.fillStyle= "White";
-		 seriesTitle.parameters.align= "left";		 
+     seriesTitle.parameters.align= "left";		 
 		 seriesTitle.posX = 5;
 		 seriesTitle.posY =  -16;
 		 seriesTitle.posZ=  -2;
@@ -1361,14 +1362,14 @@ function init() {
 		 characterName = text_creation( "abcdefghijklmnopqrstuvwxyz", 0, 4, 0.68);
 		 characterName.parameters.font= "120px Arial";
 		 characterName.parameters.fillStyle= "White";
-		 characterName.posX = 3;
+     characterName.posX = 3;
 		 characterName.posY =  -12;
 		 characterName.posZ=  -2;
 		 characterName.position.set( characterName.posX, characterName.posY, characterName.posZ);
 		 characterName.scale.set(24,3.5,1);
 		 characterName.name = "characterName";
 		 characterName.update();
-		 //Image Source
+     //Image Source
 		 imageSource = text_creation( "Link to Image Source", 0, 4, 0.68);
 		 imageSource.parameters.font= "100px Arial";
 		 imageSource.parameters.fillStyle= "palegoldenrod";
@@ -1490,6 +1491,7 @@ function init() {
 	 }
 	 
 	 // Setting the cards 
+
 	 function divide_cards_into_teams(){
 		 //Help from http://www.color-blindness.com/coblis-color-blindness-simulator/
 		 // "Blue" - Team Aqua
@@ -1500,6 +1502,7 @@ function init() {
 		 console.log("Cards Array Lengt : "+cardsArray.length);
 		 //cardsArray.push
 		 
+
 	 }
 	 
 	 // Generate Unique card with a White Background
@@ -1542,6 +1545,7 @@ function init() {
 	 }
 	 
 	 // Right Score Creation
+
 	 function create_Right_Score(){
 		 //Score
 		 if(saveRightScoreTexture == null){

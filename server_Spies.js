@@ -44,10 +44,10 @@ Codename.on('connection', function (socket) {
 		 countDownInterval = null;
 		 CountDown = 61;
 	 });
+
  
 	 function countDown(){
 		 CountDown --;
-		 
 		 console.log(CountDown);		 
 		 
 		 Codename.emit('CountDown', data={ Count : CountDown});	
