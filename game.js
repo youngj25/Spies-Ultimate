@@ -4,7 +4,8 @@ var animeImages = [], cartoonImages = [], gameImages = [], additionalImages = []
 var spriteRatioWidthtoHeight =1, spriteRatioHeighttoWidth=1;
 var Width, Height, Game_State = "Start";
 var startGame, about, categories=[], steps = 0, objects = [];
-var credits, seriesTitle, characterName, imageSource;
+var credits, seriesTitle, characterName, imageSource , creditsCard = null, creditsImage = null, creditsScrollCircle= null, creditsScrollSection = null;
+
 var leftScores = 0, rightScores = 0, ScoreBoard = [], saveLeftScoreTexture = null, saveRightScoreTexture = null;
 var saveCardWhiteTexture = null, saveCardBlackTexture = null;
 var team1 = null, team2 = null, timer = null, timerSetting = "Off", timesUp;
@@ -47,9 +48,7 @@ function init() {
 			 if(scene.getObjectByName('timesUp') == null)
 				 scene.add(timesUp);
 		 }
-		 
 		 timer.update();		
-		 
 	 });
 	 
 	 Codename.on('Board', function(data) {
@@ -77,13 +76,12 @@ function init() {
 			 while(objects.length >=1){
 				 objects.shift();
 			 }
-			 
+
 			 //Clear the Score Board
 			 while(ScoreBoard.length >=1){
 				 scene.remove(ScoreBoard[0]);
 				 ScoreBoard.shift();
 			 }
-			 
 			 libraryOfImages = [];
 			 load_Start_Screen();			 
 		 }
@@ -145,7 +143,8 @@ function init() {
 				
 			 dragControls.addEventListener( 'dragstart', function(event) {
 				 // Card Holders
-				 if (event.object.name == "cardHolder"){
+				 if (event.object.name == "cardHolder" && event.object.revealed == false){
+
 					 
 					 // Civilian
 					 if(cardsTable[event.object.cardNumber].type == null){ // Yellow
@@ -153,8 +152,8 @@ function init() {
 					 }
 					 // Team 1
 					 else if(cardsTable[event.object.cardNumber].type == "Team 1"){ // Blue
+						 event.object.material.color  = new THREE.Color("rgb(23,155,220)");		
 						 event.object.material.color  = new THREE.Color("rgb(23,155,220)");
-						 
 						 ScoreBoard[leftScores].material.color  = new THREE.Color("rgb(23,155,220)");
 						 leftScores ++;						
 					 }
@@ -169,7 +168,7 @@ function init() {
 						 event.object.material.color  = new THREE.Color("rgb(23,23,23)");
 					 }
 					 
-					 
+					 event.object.revealed = true;
 					 /**
 					 if(Math.floor(Math.random()*2)==0 && leftScores < 8){ // Blue
 						 event.object.material.color  = new THREE.Color("rgb(23,155,220)");
@@ -219,7 +218,7 @@ function init() {
 					 
 					 go_to_About_Screen();					 
 				 }
-				 
+
 				 // Start Game button
 				 else if (event.object.name == "Start Game"){
 					 //Clear the clickable/draggable objects
@@ -229,13 +228,24 @@ function init() {
 					 
 					 go_to_Game_Board();
 				 }
-				 //Return
+
+				 // Return
+
 				 else if (event.object.name == "Return"){
 					 scene.remove(sectionTitle);
 					 scene.remove(seriesTitle);
 					 scene.remove(characterName);
 					 scene.remove(imageSource);
+					 scene.remove(creditsImage);
+					 scene.remove(creditsCard);
 					 scene.remove(cardText);
+					 scene.remove(creditsScrollCircle);
+					 
+					 //Clear the selections objects
+					 for(var x= 0; x< creditsScrollSection.length; x++){
+						 scene.remove(creditsScrollSection[x]);
+					 }
+
 					 
 					 //Clear the clickable/draggable objects
 					 while(objects.length >=1){
@@ -263,55 +273,356 @@ function init() {
 					 scene.remove(returnToStartScreen);
 					 load_Start_Screen();
 				 }
+				 else if (event.object.name == "imageSource"){
+					 //Opens the Url to the Source
+					 window.open(event.object.url, '_blank');
+				 }
 				 // Animes Categories
 				 else if(event.object.name == "anime"){
-					 // Change the Text Color
-					 if(anime.includeCards == true)
-						 anime.parameters.fillStyle= "#552020";
-					 else
-						 anime.parameters.fillStyle= "Crimson";
-					 
-					 anime.includeCards = !anime.includeCards;
+					 // Game Settings
+					 if(Game_State == "Start"){
+						 // Change the Text Color
+						 if(anime.includeCards == true)
+							 anime.parameters.fillStyle= "#552020";
+						 else
+							 anime.parameters.fillStyle= "Crimson";
+						 
+						 anime.includeCards = !anime.includeCards;
+						 
+					 }
+					 // Credits
+					 else if(Game_State == "Credits"){
+						 // Change the Text Color
+						 if(anime.credits != true){
+							 anime.parameters.fillStyle= "Crimson";
+							 anime.credits = true;
+							 cartoon.credits =  false;
+							 game.credits = false;
+							 // Change the Text Color for the now chosen Options
+							 cartoon.parameters.fillStyle= "#533200";
+							 game.parameters.fillStyle= "#003300";
+							 cartoon.update();
+							 game.update();
+							 
+							 // Update Scene
+							 // Change Selection Background color 
+							 creditsScrollSection[0].material.color.setHex(0xfa3a3a);
+							 
+							 // Image - Check to see if the first image is already loaded
+							 if(animeImages[0].sprite == null){						 
+								 animeImages[0].sprite = loadImagesfromText(animeImages[0].filename,"Anime",animeImages[0].backgroundColor);
+								 animeImages[0].sprite.characterName = animeImages[0].name;
+								 animeImages[0].sprite.backgroundColor = animeImages[0].backgroundColor;
+							 }		 
+							 creditsImage.material = animeImages[0].sprite;							 
+							 
+							 // Update Card
+							 if(animeImages[0].sprite.backgroundColor.trim() == "Black")				 
+								 creditsCard.material = create_Black_Card();
+							 //Make the Card Background White
+							 else if(animeImages[0].sprite.backgroundColor.trim()  == "White") 
+								 creditsCard.material = create_White_Card();	
+							 
+							 //Setting the Series and Character Name in the Credits
+							 characterName.parameters.text = animeImages[0].name;
+							 characterName.update();
+							 seriesTitle.parameters.text = "Series: "+animeImages[0].series;
+							 seriesTitle.update();
+							 
+							 // Update Selections
+							 for(var x= 1; x<creditsScrollSection.length; x++){
+								 scene.add(creditsScrollSection[x])
+								 objects.push(creditsScrollSection[x])
+								 creditsScrollSection[x].arrayNumber = x-1;
+								 creditsScrollSection[x].parameters.text = animeImages[x-1].series;			 
+								 creditsScrollSection[x].update();			 
+							 }							 
+							 
+							 //Update Link
+							 imageSource.url =  animeImages[0].source;
+							 
+							 // Reset Scroll Bar
+							 creditsScrollCircle.position.y = 5; 							 
+						 }
+					 }
+
 					 anime.update();
 				 }
 				 // Cartoons Categories
 				 else if(event.object.name == "cartoon"){
-					 // Change the Text Color
-					 if(cartoon.includeCards == true)
-						 cartoon.parameters.fillStyle= "#533200";
-					 else
-						 cartoon.parameters.fillStyle= "orangered";
-					 
-					 cartoon.includeCards = !cartoon.includeCards;
+					 if(Game_State == "Start"){
+						 // Change the Text Color
+						 if(cartoon.includeCards == true)
+							 cartoon.parameters.fillStyle= "#533200";
+						 else
+							 cartoon.parameters.fillStyle= "orangered";
+						 
+						 cartoon.includeCards = !cartoon.includeCards;
+					 }
+					 // Credits
+					 else if(Game_State == "Credits"){
+						 // Change the Text Color
+						 if(cartoon.credits != true){
+							 cartoon.parameters.fillStyle= "orangered";
+							 cartoon.credits = true;
+							 anime.credits =  false;
+							 game.credits = false;
+							 // Change the Text Color for the now chosen Options
+							 anime.parameters.fillStyle= "#552020";
+							 game.parameters.fillStyle= "#003300";
+							 anime.update();
+							 game.update();
+							 
+							 // Update Scene
+							 // Change Selection Background color 
+							 creditsScrollSection[0].material.color.setHex(0xfa7a3a);
+							 
+							 // Image - Check to see if the first image is already loaded
+							 if(cartoonImages[0].sprite == null){						 
+								 cartoonImages[0].sprite = loadImagesfromText(cartoonImages[0].filename,"Cartoon",cartoonImages[0].backgroundColor);
+								 cartoonImages[0].sprite.characterName = cartoonImages[0].name;
+								 cartoonImages[0].sprite.backgroundColor = cartoonImages[0].backgroundColor;
+							 }		 
+							 creditsImage.material = cartoonImages[0].sprite;							 
+							 
+							 // Update Card
+							 if(cartoonImages[0].sprite.backgroundColor.trim() == "Black")				 
+								 creditsCard.material = create_Black_Card();
+							 //Make the Card Background White
+							 else if(cartoonImages[0].sprite.backgroundColor.trim()  == "White") 
+								 creditsCard.material = create_White_Card();	
+							 
+							 //Setting the Series and Character Name in the Credits
+							 characterName.parameters.text = cartoonImages[0].name;
+							 characterName.update();
+							 seriesTitle.parameters.text = "Series: "+cartoonImages[0].series;
+							 seriesTitle.update();
+							 
+							 // Update Selections
+							 for(var x= 1; x<creditsScrollSection.length; x++){
+								 scene.add(creditsScrollSection[x])
+								 objects.push(creditsScrollSection[x])
+								 creditsScrollSection[x].arrayNumber = x-1;
+								 creditsScrollSection[x].parameters.text = cartoonImages[x-1].series;			 
+								 creditsScrollSection[x].update();			 
+							 }							 
+							 
+							 //Update Link
+							 imageSource.url =  cartoonImages[0].source;
+							 
+							 // Reset Scroll Bar
+							 creditsScrollCircle.position.y = 5; 		
+						 }
+					 }
 					 cartoon.update();
 				 }
 				 // Games Categories
 				 else if(event.object.name == "game"){
-					 // Change the Text Color
-					 if(game.includeCards == true)
-						 game.parameters.fillStyle= "#003300";
-					 else
-						 game.parameters.fillStyle= "Lime";
+					 if(Game_State == "Start"){
+						 // Change the Text Color
+						 if(game.includeCards == true)
+							 game.parameters.fillStyle= "#003300";
+						 else
+							 game.parameters.fillStyle= "Lime";
+						 
+						 game.includeCards = !game.includeCards;
+					 }
+					 // Credits
+					 else if(Game_State == "Credits"){
+						 // Change the Text Color
+						 if(game.credits != true){
+							 game.parameters.fillStyle= "Lime";
+							 game.credits = true;
+							 anime.credits =  false;
+							 cartoon.credits = false;
+							 // Change the Text Color for the now chosen Options
+							 anime.parameters.fillStyle= "#552020";
+							 cartoon.parameters.fillStyle= "#533200";
+							 anime.update();
+							 cartoon.update();
+							 
+							 // Update Scene
+							 // Change Selection Background color 
+							 creditsScrollSection[0].material.color.setHex(0x3a7a3a);
+							 
+							 // Image - Check to see if the first image is already loaded
+							 if(gameImages[0].sprite == null){						 
+								 gameImages[0].sprite = loadImagesfromText(gameImages[0].filename,"Game",gameImages[0].backgroundColor);
+								 gameImages[0].sprite.characterName = gameImages[0].name;
+								 gameImages[0].sprite.backgroundColor = gameImages[0].backgroundColor;
+							 }		 
+							 creditsImage.material = gameImages[0].sprite;							 
+							 
+							 // Update Card
+							 if(gameImages[0].sprite.backgroundColor.trim() == "Black")				 
+								 creditsCard.material = create_Black_Card();
+							 //Make the Card Background White
+							 else if(gameImages[0].sprite.backgroundColor.trim()  == "White") 
+								 creditsCard.material = create_White_Card();	
+							 
+							 //Setting the Series and Character Name in the Credits
+							 characterName.parameters.text = gameImages[0].name;
+							 characterName.update();
+							 seriesTitle.parameters.text = "Series: "+gameImages[0].series;
+							 seriesTitle.update();
+							 
+							 // Update Selections
+							 for(var x= 1; x<creditsScrollSection.length; x++){
+								 scene.add(creditsScrollSection[x])
+								 objects.push(creditsScrollSection[x])
+								 creditsScrollSection[x].arrayNumber = x-1;
+								 creditsScrollSection[x].parameters.text = gameImages[x-1].series;			 
+								 creditsScrollSection[x].update();			 
+							 }							 
+							 
+							 //Update Link
+							 imageSource.url =  gameImages[0].source;
+							 
+							 // Reset Scroll Bar
+							 creditsScrollCircle.position.y = 5;
+						 }
+					 }
 					 
-					 game.includeCards = !game.includeCards;
 					 game.update();
 				 }
+				 // Credits Selection
+				 else if(event.object.name == "Selection"){
+					 // Anime
+					 if(categories[1].credits == true){
+						 if(animeImages[event.object.arrayNumber].sprite == null){
+							 animeImages[event.object.arrayNumber].sprite = loadImagesfromText(animeImages[event.object.arrayNumber].filename,"Anime",animeImages[event.object.arrayNumber].backgroundColor);
+							 animeImages[event.object.arrayNumber].sprite.characterName = animeImages[event.object.arrayNumber].name;
+							 animeImages[event.object.arrayNumber].sprite.backgroundColor = animeImages[event.object.arrayNumber].backgroundColor;
+						 }		 
+						 
+						 
+						 creditsImage.material = animeImages[event.object.arrayNumber].sprite;
+						 // Update Text
+						 characterName.parameters.text = animeImages[event.object.arrayNumber].name;
+						 seriesTitle.parameters.text = "Series: "+animeImages[event.object.arrayNumber].series;
+						 characterName.update();
+						 seriesTitle.update();
+						 
+						 // Update Card
+						 // Make the Card Background Black
+						 if(animeImages[event.object.arrayNumber].sprite.backgroundColor.trim() == "Black")				 
+							 creditsCard.material = create_Black_Card();
+						 //Make the Card Background White
+						 else if(animeImages[event.object.arrayNumber].sprite.backgroundColor.trim()  == "White") 
+							 creditsCard.material = create_White_Card();	 						 
+						 
+						 //Update Link
+						 imageSource.url = animeImages[event.object.arrayNumber].source;
+					 }
+					 // Cartoon
+					 else if(categories[2].credits == true){
+						 if(cartoonImages[event.object.arrayNumber].sprite == null){
+							 cartoonImages[event.object.arrayNumber].sprite = loadImagesfromText(cartoonImages[event.object.arrayNumber].filename,"Cartoon",cartoonImages[event.object.arrayNumber].backgroundColor);
+							 cartoonImages[event.object.arrayNumber].sprite.characterName = cartoonImages[event.object.arrayNumber].name;
+							 cartoonImages[event.object.arrayNumber].sprite.backgroundColor = cartoonImages[event.object.arrayNumber].backgroundColor;
+						 }		 
+						 
+						 
+						 creditsImage.material = cartoonImages[event.object.arrayNumber].sprite;
+						 // Update Text
+						 characterName.parameters.text = cartoonImages[event.object.arrayNumber].name;
+						 seriesTitle.parameters.text = "Series: "+cartoonImages[event.object.arrayNumber].series;
+						 characterName.update();
+						 seriesTitle.update();
+						 
+						 // Update Card
+						 // Make the Card Background Black
+						 if(cartoonImages[event.object.arrayNumber].sprite.backgroundColor.trim() == "Black")				 
+							 creditsCard.material = create_Black_Card();
+						 //Make the Card Background White
+						 else if(cartoonImages[event.object.arrayNumber].sprite.backgroundColor.trim()  == "White") 
+							 creditsCard.material = create_White_Card();	 						 
+						 
+						 //Update Link
+						 imageSource.url = cartoonImages[event.object.arrayNumber].source;
+					 }
+					 // Games
+					 else if(categories[3].credits == true){
+						 if(gameImages[event.object.arrayNumber].sprite == null){
+							 gameImages[event.object.arrayNumber].sprite = loadImagesfromText(gameImages[event.object.arrayNumber].filename,"Game",gameImages[event.object.arrayNumber].backgroundColor);
+							 gameImages[event.object.arrayNumber].sprite.characterName = gameImages[event.object.arrayNumber].name;
+							 gameImages[event.object.arrayNumber].sprite.backgroundColor = gameImages[event.object.arrayNumber].backgroundColor;
+						 }		 
+						 
+						 
+						 creditsImage.material = gameImages[event.object.arrayNumber].sprite;
+						 // Update Text
+						 characterName.parameters.text = gameImages[event.object.arrayNumber].name;
+						 seriesTitle.parameters.text = "Series: "+gameImages[event.object.arrayNumber].series;
+						 characterName.update();
+						 seriesTitle.update();
+						 
+						 // Update Card
+						 // Make the Card Background Black
+						 if(gameImages[event.object.arrayNumber].sprite.backgroundColor.trim() == "Black")				 
+							 creditsCard.material = create_Black_Card();
+						 //Make the Card Background White
+						 else if(gameImages[event.object.arrayNumber].sprite.backgroundColor.trim()  == "White") 
+							 creditsCard.material = create_White_Card();	 						 
+						 
+						 //Update Link
+						 imageSource.url = gameImages[event.object.arrayNumber].source;
+					 }
 				 
 				 
+				 }
 				 
 				 //console.log("lol start of drag: ");
 			 });
 			 
 			 dragControls.addEventListener( 'drag', function(event)   {
-				 event.object.position.set(event.object.posX, event.object.posY, event.object.posZ);
+				 if(event.object.name != "creditsScrollCircle")
+					 event.object.position.set(event.object.posX, event.object.posY, event.object.posZ);
+				 else{
+					 // Keeps the Scroll bar in the same X position
+					 event.object.position.x = event.object.posX;	
+					 
+					 // Limits the Height of the Scroll Bar
+					 if(event.object.position.y > 5)
+						 event.object.position.y = 5; 
+					 else if(event.object.position.y < -16)
+						 event.object.position.y = -16; 
+					 
+					 // Make this a negative because it's easier to work with
+					 var percentage = event.object.position.y - 5;
+					 
+					 if(categories[1].credits == true)
+						 percentage = Math.floor(-percentage/21 * (animeImages.length - 9));
+					 else  if(categories[2].credits == true)
+						 percentage = Math.floor(-percentage/21 * (cartoonImages.length - 9));
+					  else  if(categories[3].credits == true)
+						 percentage = Math.floor(-percentage/21 * (gameImages.length - 9));
+					 
+					 
+					 for(var x= 1; x<creditsScrollSection.length; x++){
+						 //scene.add(creditsScrollSection[x])
+						 //objects.push(creditsScrollSection[x])
+						 creditsScrollSection[x].arrayNumber = x-1+percentage;
+						 
+						 if(categories[1].credits == true)
+							 creditsScrollSection[x].parameters.text = animeImages[x-1+percentage].series;			
+						 else  if(categories[2].credits == true)
+							 creditsScrollSection[x].parameters.text = cartoonImages[x-1+percentage].series;	
+						 else  if(categories[3].credits == true)
+							 creditsScrollSection[x].parameters.text = gameImages[x-1+percentage].series;	
+						 
+						 creditsScrollSection[x].update();			 
+					 }
+					 
+					 
+				 }
+					 
 			 });
 			 
 			 dragControls.addEventListener( 'dragend', function(event)   {
-				 if (event.object.name == "occuranceCircle"){
-					 //console.log(event.object.position.x);
-					 event.object.position.y = event.object.posY; 
-					 gameSettingsOptions[0].fruitOccurance = (16 + event.object.position.x) * 2.5 + 10;
-				 }
+				 //if (event.object.name == "creditsScrollCircle"){
+					 //event.object.position.y = event.object.posY; 
+				 //}
 			 });
 		 
 		 //console.log(dragControls);
@@ -340,6 +651,27 @@ function init() {
 			 scene.add(categories[x]);
 			 objects.push(categories[x]);
 		 }
+     
+		 // Updates the Color Selections
+		 // Anime
+		 if(anime.includeCards != true)
+			 anime.parameters.fillStyle= "#552020";
+		 else
+			 anime.parameters.fillStyle= "Crimson";
+		 // Cartoon
+		 if(cartoon.includeCards != true)
+			 cartoon.parameters.fillStyle= "#533200";
+		 else
+			 cartoon.parameters.fillStyle= "orangered";
+		 // Game
+		 if(game.includeCards != true)
+			 game.parameters.fillStyle= "#003300";
+		 else
+			 game.parameters.fillStyle= "Lime";
+		 
+		 anime.update();
+		 cartoon.update();
+		 game.update();
 		 
 		 Game_State = "Start";		
 		 steps = 0;		 
@@ -358,8 +690,130 @@ function init() {
 		 scene.add(sectionTitle);
 		 scene.add(seriesTitle);
 		 scene.add(characterName);
+		 
+		 // Image - Check to see if the first image is already loaded
+		 if(animeImages[0].sprite == null){						 
+			 animeImages[0].sprite = loadImagesfromText(animeImages[0].filename,"Anime",animeImages[0].backgroundColor);
+			 animeImages[0].sprite.characterName = animeImages[0].name;
+			 animeImages[0].sprite.backgroundColor = animeImages[0].backgroundColor;
+		 }		 
+		 
+		 // For the Credits Images
+		 if(creditsImage == null)
+			 creditsImage = new THREE.Sprite();	
+		 
+		 creditsImage.material = animeImages[0].sprite;
+		 creditsImage.position.set(3,-1,-2); //xyz
+		 //creditsImage.scale.set(6,8,1); < - Cards Scales
+		 creditsImage.scale.set(9,12,1);
+		 scene.add(creditsImage);
+		 
+		 if(creditsCard == null)
+			 creditsCard = new THREE.Sprite();
+		
+		 if(animeImages[0].sprite.backgroundColor.trim() == "Black")				 
+			 creditsCard.material = create_Black_Card();
+		 //Make the Card Background White
+		 else if(animeImages[0].sprite.backgroundColor.trim()  == "White") 
+			 creditsCard.material = create_White_Card();	 
+		 
+		 creditsCard.posX =3;	 
+		 creditsCard.posY = -3;	 
+		 creditsCard.posZ = -2.1;	 
+		 creditsCard.position.set(creditsCard.posX, creditsCard.posY, creditsCard.posZ); //xyz
+		 //creditsCard.scale.set(7,9,1); <- Cards Scales
+		 creditsCard.scale.set(10.5,13.5,1);
+		 scene.add(creditsCard);
+		 
+		 //Setting the Series and Character Name in the Credits
+		 characterName.parameters.text = animeImages[0].name;
+		 characterName.update();
+		 seriesTitle.parameters.text = "Series: "+animeImages[0].series;
+		 seriesTitle.update();
+		 
+		 //Set the Source Link
+		 imageSource.url =  animeImages[0].source;
 		 scene.add(imageSource);
-		 //scene.add(cardText);
+		 objects.push(imageSource);
+		 
+		 // For the Scroll Bars Section
+		 
+		 //creditsScrollCircle= null, creditsScrollSection = null;
+		 
+		 if(creditsScrollCircle == null){
+			 var geometry = new THREE.PlaneBufferGeometry (1, 2,0);
+			 var material = new THREE.MeshBasicMaterial( { color: 0x3a3a3a } );
+			 creditsScrollCircle = new THREE.Mesh( geometry, material );
+			 creditsScrollCircle.position.set(-8, 5, -2); 
+			 creditsScrollCircle.posX = -8; 
+			 creditsScrollCircle.posY = 5; 
+			 creditsScrollCircle.posZ = -2; 
+			 creditsScrollCircle.name = "creditsScrollCircle"; 
+		 }
+		 objects.push(creditsScrollCircle)
+		 scene.add(creditsScrollCircle)
+		 
+		 if(creditsScrollSection == null){
+			 creditsScrollSection = [];
+			 
+			 // Selection Background
+			 var geometry = new THREE.PlaneBufferGeometry (16, 25,0);
+			 var material = new THREE.MeshBasicMaterial( { color: 0xfa3a3a } );
+			 var selectionBackground = new THREE.Mesh( geometry, material );
+			 selectionBackground.position.set(-15, -6, -3); 
+			 selectionBackground.material.transparent = true;
+			 selectionBackground.material.opacity = 0.3; 
+			 selectionBackground.name = "selectionBackground"; 
+			 creditsScrollSection.push(selectionBackground);
+			 
+			 // First Selection
+			 // Start Game
+			 var firstSelection =  credits_Selection_Creation(0);
+			 creditsScrollSection.push(firstSelection);		
+			 
+			 // Second Selection
+			 var secondSelection =  credits_Selection_Creation(1);
+			 creditsScrollSection.push(secondSelection);		
+			 
+			 // Third Selection
+			 var thirdSelection = credits_Selection_Creation(2);
+			 creditsScrollSection.push(thirdSelection);		
+			 
+			 // Fourth Selection
+			 var fourthSelection = credits_Selection_Creation(3);
+			 creditsScrollSection.push(fourthSelection);			 
+			 
+			 // Fifth Selection
+			 var fifthSelection = credits_Selection_Creation(4);
+			 creditsScrollSection.push(fifthSelection);				 
+			 
+			 // Sixth Selection
+			 var sixthSelection = credits_Selection_Creation(5);
+			 creditsScrollSection.push(sixthSelection);
+
+			 // Seventh Selection
+			 var seventhSelection = credits_Selection_Creation(6);
+			 creditsScrollSection.push(seventhSelection);	
+			 
+			 // Eigth Selection
+			 var eigthSelection = credits_Selection_Creation(7);
+			 creditsScrollSection.push(eigthSelection);	
+			 
+			 // Nineth Selection
+			 var ninethSelection = credits_Selection_Creation(8);
+			 creditsScrollSection.push(ninethSelection);	
+		 }
+		 
+		 scene.add(creditsScrollSection[0]);
+		 
+		 for(var x= 1; x<creditsScrollSection.length; x++){
+			 scene.add(creditsScrollSection[x])
+			 objects.push(creditsScrollSection[x])
+			 creditsScrollSection[x].arrayNumber = x-1;
+			 creditsScrollSection[x].parameters.text = animeImages[x-1].series;			 
+			 creditsScrollSection[x].update();			 
+		 }
+		 
 		 
 		 // categories
 		 categories[0].parameters.font= "90px Arial";
@@ -373,13 +827,20 @@ function init() {
 			 categories[x].position.y = categories[x].posY;
 			 categories[x].parameters.font= "105px Arial";
 			 categories[x].update();
+			 objects.push(categories[x]);
 		 }
-		 categories[1].credits = true;
+		 anime.parameters.fillStyle= "Crimson";
+		 anime.credits = true;
+		 anime.update();
+		 cartoon.parameters.fillStyle= "#533200";
+		 game.parameters.fillStyle= "#003300";
+		 cartoon.update();
+		 game.update();
+		 
 		 
 		 // Return to Start Screen
 		 scene.add(returnToStartScreen);
 		 objects.push(returnToStartScreen);
-		 
 	 }
 	 
 	  // Load the Credits Screens
@@ -405,8 +866,7 @@ function init() {
 		 objects.push(returnToStartScreen);
 		 
 	 }
-	  
-	 //Go to the Game Board
+	 // Go to the Game Board
 	 function go_to_Game_Board(){
 		 scene.remove(startGame);
 		 scene.remove(credits);
@@ -436,7 +896,7 @@ function init() {
 		 
 	 }
 	  
-	 //Load Anime Images
+	 // Load Anime Images
 	 function load_Anime_Images(){
 		 //Loading Anime Images from the File
 		 animeImages=[];
@@ -479,7 +939,7 @@ function init() {
 		 
 	 }
 	 
-	 //Load Cartoon Images
+	 // Load Cartoon Images
 	 function load_Cartoon_Images(){
 		 //Loading Cartoon Images from the File
 		 cartoonImages=[];
@@ -511,7 +971,7 @@ function init() {
 		 });
 	 }
 	
-	 //Load Game Images
+	 // Load Game Images
 	 function load_Game_Images(){
 		 //Loading Game Images from the File
 		 gameImages=[];
@@ -542,8 +1002,8 @@ function init() {
 				 console.log("Games Loaded - "+gameImages.length+" images");
 		 });	 
 	 }
-	 
-	 //Load Additional Images
+
+	 // Load Additional Images
 	 function load_Additional_Images(){
 		 //Loading Additional Images from the File
 		 additionalImages=[];
@@ -615,7 +1075,7 @@ function init() {
 		 return Imagecover;
 	 }
 	 
-	 //
+	 // Fills the Library of Cards for the Chosen Categories
 	 function fillLibraryOfImages(){
 		 // I have an additional section size here because at times a player may not want a section...
 		 // in other words, setting it to zero
@@ -708,8 +1168,7 @@ function init() {
 		
 		
 	 }
-	  
-	 //Go to Game Menu
+	 //Displays the Cards on the Table from the Library
 	 function displayPlaceHolders(){
 		 var initialHeight = 11.75;
 		 for(var x = 0; x<libraryOfImages.length && x < 24; x++){
@@ -738,6 +1197,7 @@ function init() {
 			 cardHolder.position.set(cardHolder.posX, cardHolder.posY, cardHolder.posZ); //xyz
 			 cardHolder.scale.set(7,9,1);
 			 cardHolder.name = "cardHolder";
+			 cardHolder.revealed = false;
 			 cardHolder.cardNumber = x;
 			 imagesOnDisplay.push(cardHolder);
 			 scene.add(imagesOnDisplay[imagesOnDisplay.length-1]);
@@ -890,7 +1350,8 @@ function init() {
 		 seriesTitle = text_creation( "Series: abcdefghijklmnopqrstuvwxyz", 0, 4, 0.68);
 		 seriesTitle.parameters.font= "105px Arial";
 		 seriesTitle.parameters.fillStyle= "White";
-		 seriesTitle.posX = -2;
+     seriesTitle.parameters.align= "left";		 
+		 seriesTitle.posX = 5;
 		 seriesTitle.posY =  -16;
 		 seriesTitle.posZ=  -2;
 		 seriesTitle.position.set( seriesTitle.posX, seriesTitle.posY, seriesTitle.posZ);
@@ -901,14 +1362,14 @@ function init() {
 		 characterName = text_creation( "abcdefghijklmnopqrstuvwxyz", 0, 4, 0.68);
 		 characterName.parameters.font= "120px Arial";
 		 characterName.parameters.fillStyle= "White";
-		 characterName.posX = 0;
+     characterName.posX = 3;
 		 characterName.posY =  -12;
 		 characterName.posZ=  -2;
 		 characterName.position.set( characterName.posX, characterName.posY, characterName.posZ);
 		 characterName.scale.set(24,3.5,1);
 		 characterName.name = "characterName";
 		 characterName.update();
-		 //Image Spurce
+     //Image Source
 		 imageSource = text_creation( "Link to Image Source", 0, 4, 0.68);
 		 imageSource.parameters.font= "100px Arial";
 		 imageSource.parameters.fillStyle= "palegoldenrod";
@@ -918,6 +1379,7 @@ function init() {
 		 imageSource.position.set( imageSource.posX, imageSource.posY, imageSource.posZ);
 		 imageSource.scale.set(24,3.5,1);
 		 imageSource.name = "imageSource";
+		 imageSource.url = null;
 		 imageSource.update();		 		 
 		 
 		 // About
@@ -1028,7 +1490,8 @@ function init() {
 		 
 	 }
 	 
-	 //Setting the cards 
+	 // Setting the cards 
+
 	 function divide_cards_into_teams(){
 		 //Help from http://www.color-blindness.com/coblis-color-blindness-simulator/
 		 // "Blue" - Team Aqua
@@ -1039,9 +1502,10 @@ function init() {
 		 console.log("Cards Array Lengt : "+cardsArray.length);
 		 //cardsArray.push
 		 
+
 	 }
 	 
-	 //Generate Unique card with a White Background
+	 // Generate Unique card with a White Background
 	 function create_White_Card(){
 		 //card;
 		 if(saveCardWhiteTexture == null){
@@ -1054,7 +1518,7 @@ function init() {
 		 return Cards;
 	 }
 	 
-	 //Generate Unique card with a Black Background
+	 // Generate Unique card with a Black Background
 	 function create_Black_Card(){
 		 //card;
 		 if(saveCardBlackTexture == null){
@@ -1067,7 +1531,7 @@ function init() {
 		 return Cards;
 	 }
 	  
-	 //Left Score Creation
+	 // Left Score Creation
 	 function create_Left_Score(){
 		 //Score
 		 if(saveLeftScoreTexture == null){
@@ -1080,7 +1544,8 @@ function init() {
 		 return Score;
 	 }
 	 
-	 //Right Score Creation
+	 // Right Score Creation
+
 	 function create_Right_Score(){
 		 //Score
 		 if(saveRightScoreTexture == null){
@@ -1129,6 +1594,23 @@ function init() {
 		 return texts;
 	 }
 	 
+	 // Selection Creation for the Credits Selection
+	 // SelectionNumber is the number order of the Selections starting from 0 - > 9
+	 function credits_Selection_Creation( selectionNumber){
+		 var selection = text_creation( "selection", 0, 3, 0.8);
+		 selection.parameters.font= "95px Arial";
+		 selection.parameters.fillStyle= "Black";
+		 selection.posX = -16.5;
+		 selection.posY =  selectionNumber*-2.5 + 5;
+		 selection.posZ = -2.9;
+		 selection.position.set( selection.posX, selection.posY, selection.posZ);
+		 selection.scale.set(14,3,1);
+		 selection.arrayNumber = 0;
+		 selection.name = "Selection";
+		 selection.parameters.align = "left"
+		 selection.update();
+		 return selection;
+	 }
 	 
 }
-window.onload = init;	
+window.onload = init;
