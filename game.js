@@ -65,25 +65,21 @@ function init() {
 	 
 	 Codename.on('Info', function(data) {
 		 if(Game_State == "Board"){
-			 for(var x = 0; x < 24 && x<cardsTable.length; x++){
+			 for(var x = 0; x < 24 && x<cardBoard.length; x++){
 				 if( data.Board[x].type == null){
 					 cardBoard[x].material.color.setHex(0xffff00);
-					 console.log(x + ". " + cardsTable[x].type);
 				 }
 				 else if( data.Board[x].type == "Assassin"){
 					 cardBoard[x].material.color.setHex(0x575757);
-					 console.log(x + ". " + cardsTable[x].type+"*");
 				 }
 				 else if( data.Board[x].type == "Team 1"){
 					 cardBoard[x].material.color.setHex(0x2260a7);
-					 console.log(x + ". " + cardsTable[x].type+"*");
 				 }
 				 else if( data.Board[x].type == "Team 2"){
 					 cardBoard[x].material.color.setHex(0xa73457);
-					 console.log(x + ". " + cardsTable[x].type+"*");
 				 }
 			 }
-			 alert("finished.")
+			 //alert("finished.")
 		 }
 	 });
 	 
