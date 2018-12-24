@@ -5,7 +5,7 @@ var spriteRatioWidthtoHeight =1, spriteRatioHeighttoWidth=1;
 var Width, Height, Game_State = "Start";
 var startGame, about, categories=[], steps = 0, objects = [];
 var credits, seriesTitle, characterName, imageSource , creditsCard = null, creditsImage = null, creditsScrollCircle= null, creditsScrollSection = null;
-
+var cardSheet, boardDisplay, listDisplay, cardBoard = [];
 var leftScores = 0, rightScores = 0, ScoreBoard = [], saveLeftScoreTexture = null, saveRightScoreTexture = null;
 var saveCardWhiteTexture = null, saveCardBlackTexture = null;
 var team1 = null, team2 = null, timer = null, timerSetting = "Off", timesUp;
@@ -30,7 +30,8 @@ function init() {
 	 //camera.aspect = window.innerWidth/window.innerHeight;
 	 camera.aspect = Width/Height;
 	 
-	 socket = io.connect('http://localhost:9000');
+	 //socket = io.connect('http://localhost:9000');
+	 socket = io.connect('http://ec2-34-205-146-82.compute-1.amazonaws.com:9000');
         
 	 //Insert Data from the Server
 	 Codename.on('CountDown', function(data) {
@@ -48,16 +49,42 @@ function init() {
 			 if(scene.getObjectByName('timesUp') == null)
 				 scene.add(timesUp);
 		 }
+		 
 		 timer.update();		
+		 
 	 });
 	 
 	 Codename.on('Board', function(data) {
-		 console.log(data);		 
-		 for(var x = 0; x < 24; x++){
-			 cardsTable[x].type= data.Board[x].type;
-			 console.log(x + ". " + cardsTable[x].type);
+		 if(Game_State == "Game"){
+			 for(var x = 0; x < 24 && x<cardsTable.length; x++){
+				 cardsTable[x].type= data.Board[x].type;
+				 console.log(x + ". " + cardsTable[x].type);
+			 }
 		 }
-		 
+	 });
+	 
+	 Codename.on('Info', function(data) {
+		 if(Game_State == "Board"){
+			 for(var x = 0; x < 24 && x<cardsTable.length; x++){
+				 if( data.Board[x].type == null){
+					 cardBoard[x].material.color.setHex(0xffff00);
+					 console.log(x + ". " + cardsTable[x].type);
+				 }
+				 else if( data.Board[x].type == "Assassin"){
+					 cardBoard[x].material.color.setHex(0x575757);
+					 console.log(x + ". " + cardsTable[x].type+"*");
+				 }
+				 else if( data.Board[x].type == "Team 1"){
+					 cardBoard[x].material.color.setHex(0x2260a7);
+					 console.log(x + ". " + cardsTable[x].type+"*");
+				 }
+				 else if( data.Board[x].type == "Team 2"){
+					 cardBoard[x].material.color.setHex(0xa73457);
+					 console.log(x + ". " + cardsTable[x].type+"*");
+				 }
+			 }
+			 alert("finished.")
+		 }
 	 });
 	 
 	 //add the output of the renderer to the html element
@@ -76,12 +103,13 @@ function init() {
 			 while(objects.length >=1){
 				 objects.shift();
 			 }
-
+			 
 			 //Clear the Score Board
 			 while(ScoreBoard.length >=1){
 				 scene.remove(ScoreBoard[0]);
 				 ScoreBoard.shift();
 			 }
+			 
 			 libraryOfImages = [];
 			 load_Start_Screen();			 
 		 }
@@ -144,7 +172,6 @@ function init() {
 			 dragControls.addEventListener( 'dragstart', function(event) {
 				 // Card Holders
 				 if (event.object.name == "cardHolder" && event.object.revealed == false){
-
 					 
 					 // Civilian
 					 if(cardsTable[event.object.cardNumber].type == null){ // Yellow
@@ -152,8 +179,7 @@ function init() {
 					 }
 					 // Team 1
 					 else if(cardsTable[event.object.cardNumber].type == "Team 1"){ // Blue
-						 event.object.material.color  = new THREE.Color("rgb(23,155,220)");		
-						 event.object.material.color  = new THREE.Color("rgb(23,155,220)");
+						 event.object.material.color  = new THREE.Color("rgb(23,155,220)");						 
 						 ScoreBoard[leftScores].material.color  = new THREE.Color("rgb(23,155,220)");
 						 leftScores ++;						
 					 }
@@ -218,7 +244,17 @@ function init() {
 					 
 					 go_to_About_Screen();					 
 				 }
-
+				 // cardSheet button
+				 else if(event.object.name == "cardSheet"){
+					 //Clear the clickable/draggable objects
+					 while(objects.length >=1){
+						 objects.shift();
+					 }
+					 
+					 go_to_Card_Screen();					 
+				 }
+				 
+				 
 				 // Start Game button
 				 else if (event.object.name == "Start Game"){
 					 //Clear the clickable/draggable objects
@@ -228,24 +264,11 @@ function init() {
 					 
 					 go_to_Game_Board();
 				 }
-
 				 // Return
-
 				 else if (event.object.name == "Return"){
 					 scene.remove(sectionTitle);
-					 scene.remove(seriesTitle);
-					 scene.remove(characterName);
-					 scene.remove(imageSource);
-					 scene.remove(creditsImage);
-					 scene.remove(creditsCard);
 					 scene.remove(cardText);
-					 scene.remove(creditsScrollCircle);
-					 
-					 //Clear the selections objects
-					 for(var x= 0; x< creditsScrollSection.length; x++){
-						 scene.remove(creditsScrollSection[x]);
-					 }
-
+					
 					 
 					 //Clear the clickable/draggable objects
 					 while(objects.length >=1){
@@ -253,7 +276,21 @@ function init() {
 					 }
 					 
 					 // Correct categories
-					 if(Game_State == "Credits"){					
+					 if(Game_State == "Credits"){				
+						 scene.remove(seriesTitle);
+						 scene.remove(characterName);
+						 scene.remove(imageSource);
+						 scene.remove(creditsImage);
+						 scene.remove(creditsCard);
+						 
+						 scene.remove(creditsScrollCircle);
+					 
+					 
+						 //Clear the selections objects
+						 for(var x= 0; x< creditsScrollSection.length; x++){
+							 scene.remove(creditsScrollSection[x]);
+						 }
+					 
 
 						 categories[0].parameters.font= "135px Arial";
 						 categories[0].position.y = categories[0].position.y+8;
@@ -268,11 +305,20 @@ function init() {
 							 categories[x].update();
 						 }
 					 }
-					 
+					 else if(Game_State == "Board"){
+						 
+						 scene.remove(boardDisplay);
+						 scene.remove(listDisplay);
+						 
+						 for(var x= 0; x< cardBoard.length; x++){
+							 scene.remove(cardBoard[x]);
+						 }
+					 }
 					 // Return to Start Screen
 					 scene.remove(returnToStartScreen);
 					 load_Start_Screen();
 				 }
+				 // Go to Image Source
 				 else if (event.object.name == "imageSource"){
 					 //Opens the Url to the Source
 					 window.open(event.object.url, '_blank');
@@ -345,7 +391,7 @@ function init() {
 							 creditsScrollCircle.position.y = 5; 							 
 						 }
 					 }
-
+					 
 					 anime.update();
 				 }
 				 // Cartoons Categories
@@ -572,6 +618,7 @@ function init() {
 				 
 				 }
 				 
+				 
 				 //console.log("lol start of drag: ");
 			 });
 			 
@@ -643,6 +690,10 @@ function init() {
 		 scene.add(about);
 		 objects.push(about)
 		 
+		 // cardSheet
+		 scene.add(cardSheet);
+		 objects.push(cardSheet)
+		 
 		 // Categories
 		 // The Categories Title
 		 scene.add(categories[0]);
@@ -651,7 +702,7 @@ function init() {
 			 scene.add(categories[x]);
 			 objects.push(categories[x]);
 		 }
-     
+		 
 		 // Updates the Color Selections
 		 // Anime
 		 if(anime.includeCards != true)
@@ -683,6 +734,7 @@ function init() {
 		 scene.remove(startGame);
 		 scene.remove(credits);
 		 scene.remove(about);
+		 scene.remove(cardSheet);		 
 		 
 		 sectionTitle.parameters.text= "Credits:";
 		 sectionTitle.parameters.fillStyle= "Gold";
@@ -803,7 +855,7 @@ function init() {
 			 var ninethSelection = credits_Selection_Creation(8);
 			 creditsScrollSection.push(ninethSelection);	
 		 }
-		 
+		 creditsScrollSection[0].material.color.setHex(0xfa3a3a);
 		 scene.add(creditsScrollSection[0]);
 		 
 		 for(var x= 1; x<creditsScrollSection.length; x++){
@@ -849,6 +901,7 @@ function init() {
 		 scene.remove(startGame);
 		 scene.remove(credits);
 		 scene.remove(about);
+		 scene.remove(cardSheet);
 		 
 		 sectionTitle.parameters.text= "About";
 		 sectionTitle.parameters.fillStyle= "#4169E1";
@@ -866,11 +919,59 @@ function init() {
 		 objects.push(returnToStartScreen);
 		 
 	 }
+	  
+	 // Load the Card Screens
+	 function go_to_Card_Screen(){
+		 Game_State = "Board";
+		 scene.remove(startGame);
+		 scene.remove(credits);
+		 scene.remove(about);
+		 scene.remove(cardSheet);
+		 
+		 // Add the Scene Title
+		 sectionTitle.parameters.text= "Board";
+		 sectionTitle.parameters.fillStyle= "#afafaf";
+		 sectionTitle.update();		 
+		 scene.add(sectionTitle);
+		 // Input Board Display Button
+		 scene.add(boardDisplay);
+		 objects.push(boardDisplay);
+		 // Input List Display Button
+		 scene.add(listDisplay);
+		 objects.push(listDisplay);
+		 
+		 // Categories
+		 for(var x = 0; x < categories.length; x++)
+			 scene.remove(categories[x]);
+		 
+		 if( cardBoard.length == 0){
+			 // Add the Squares
+			 for( var x = 0; x <24; x++){
+				 var cards = create_Square();
+				 cards.position.set(-18+(x%6)*7.5, 6 - Math.floor(x/6)*6.75, -3); 
+				 cardBoard.push(cards);
+				 scene.add(cardBoard[cardBoard.length-1]);
+			 }
+		 }
+		 
+		 for( var x = 0; x <24; x++){
+			 scene.add(cardBoard[x]);
+		 }
+		 
+		 // Get the Board info
+		 Codename.emit('Get Board Info');
+		 
+		 // Return to Start Screen
+		 scene.add(returnToStartScreen);
+		 objects.push(returnToStartScreen);
+	 }
+	 
 	 // Go to the Game Board
 	 function go_to_Game_Board(){
 		 scene.remove(startGame);
 		 scene.remove(credits);
 		 scene.remove(about);
+		 scene.remove(cardSheet);
 		 
 		 // categories
 		 for(var x = 0; x < categories.length; x++)
@@ -890,10 +991,9 @@ function init() {
 		 }
 		 
 		 fillLibraryOfImages();
-		 var data = {size : 24};
-		 Codename.emit('Start Game', data);
-		 
-		 
+		 // Lazy..
+		 //var data = {size : 24, cards: cardsTable};
+		 //Codename.emit('Start Game', data);
 	 }
 	  
 	 // Load Anime Images
@@ -1002,7 +1102,7 @@ function init() {
 				 console.log("Games Loaded - "+gameImages.length+" images");
 		 });	 
 	 }
-
+	 
 	 // Load Additional Images
 	 function load_Additional_Images(){
 		 //Loading Additional Images from the File
@@ -1079,6 +1179,8 @@ function init() {
 	 function fillLibraryOfImages(){
 		 // I have an additional section size here because at times a player may not want a section...
 		 // in other words, setting it to zero
+		 var dataArray = [];
+		 
 		 
 		 //Animes		 
 		 animeSize = 0;
@@ -1127,8 +1229,15 @@ function init() {
 						 if(animeImages[x].sprite == null){						 
 							 animeImages[x].sprite = loadImagesfromText(animeImages[x].filename,"Anime",animeImages[x].backgroundColor);
 							 animeImages[x].sprite.characterName = animeImages[x].name;
+							 animeImages[x].sprite.series = animeImages[x].series;
 							 animeImages[x].sprite.backgroundColor = animeImages[x].backgroundColor;
 						 }
+						 var a = {
+							 name: animeImages[x].name,
+							 series: animeImages[x].series,
+							 type: null
+						 }
+						 dataArray.push(a)
 						 libraryOfImages.push(animeImages[x].sprite);			
 						 listOfRandomImages.shift();
 					 }
@@ -1140,6 +1249,12 @@ function init() {
 							 cartoonImages[x].sprite.characterName = cartoonImages[x].name;
 							 cartoonImages[x].sprite.backgroundColor = cartoonImages[x].backgroundColor;
 						 }
+						 var c = {
+							 name: cartoonImages[x].name,
+							 series: cartoonImages[x].series,
+							 type: null
+						 }
+						 dataArray.push(c)
 						 libraryOfImages.push(cartoonImages[x].sprite);		
 						 listOfRandomImages.shift();						 
 					 }
@@ -1151,6 +1266,12 @@ function init() {
 							 gameImages[x].sprite.characterName = gameImages[x].name;
 							 gameImages[x].sprite.backgroundColor = gameImages[x].backgroundColor;
 						 }
+						 var g = {
+							 name: gameImages[x].name,
+							 series: gameImages[x].series,
+							 type: null
+						 }
+						 dataArray.push(g)
 						 libraryOfImages.push(gameImages[x].sprite);		
 						 listOfRandomImages.shift();						 
 					 }
@@ -1161,6 +1282,10 @@ function init() {
 			 }
 			 
 			 displayPlaceHolders();
+			 //var data = {cards: libraryOfImages};
+			 var data = {cards: dataArray};
+			 console.log(data);
+			 Codename.emit('Start Game', data);
 		 }
 		 else{			 
 			 console.log("Not enough images.... sorry");
@@ -1168,6 +1293,7 @@ function init() {
 		
 		
 	 }
+	  
 	 //Displays the Cards on the Table from the Library
 	 function displayPlaceHolders(){
 		 var initialHeight = 11.75;
@@ -1215,10 +1341,8 @@ function init() {
 			 else{
 				 text.parameters.lineHeight=0.75 - fontSize*0.025;
 				 fontSize = 115 - (fontSize*4);
-				 text.parameters.font= fontSize+"px Arial";				  
-				 console.log( text.parameters.lineWidth)
-			 }
-			 
+				 text.parameters.font= fontSize+"px Arial";				 
+			 }			 
 			 
 			 //text.parameters.font= "70px Arial";
 			 text.parameters.fillStyle= "Yellow";
@@ -1253,11 +1377,13 @@ function init() {
 		 scene.add(imagesOnDisplay[imagesOnDisplay.length-1]);
 		 
 		 //Left Sides Scoring
-		 for(var x = 0; x < 8; x++){
+		 //for(var x = 0; x < 8; x++){ Gonna make it always the Left side for now
+		 for(var x = 0; x < 9; x++){
 			 var score = new THREE.Sprite();
 			 score.material = create_Left_Score();
 			 score.material.color  = new THREE.Color("rgb(255,255,255)");
-			 score.position.set(-22.5+x*2.75, initialHeight + 6.5,-2); //xyz
+			 // score.position.set(-22.5+x*2.75, initialHeight + 6.5,-2); // For the temp fix Ima make it start a little earlier
+			 score.position.set(-23.5+x*2.5, initialHeight + 6.5,-2); 
 			 score.scale.set(1.75, 3.5,1);
 			 score.name = "Left Score "+x;
 			 ScoreBoard.push(score);
@@ -1350,7 +1476,7 @@ function init() {
 		 seriesTitle = text_creation( "Series: abcdefghijklmnopqrstuvwxyz", 0, 4, 0.68);
 		 seriesTitle.parameters.font= "105px Arial";
 		 seriesTitle.parameters.fillStyle= "White";
-     seriesTitle.parameters.align= "left";		 
+		 seriesTitle.parameters.align= "left";		 
 		 seriesTitle.posX = 5;
 		 seriesTitle.posY =  -16;
 		 seriesTitle.posZ=  -2;
@@ -1362,14 +1488,14 @@ function init() {
 		 characterName = text_creation( "abcdefghijklmnopqrstuvwxyz", 0, 4, 0.68);
 		 characterName.parameters.font= "120px Arial";
 		 characterName.parameters.fillStyle= "White";
-     characterName.posX = 3;
+		 characterName.posX = 3;
 		 characterName.posY =  -12;
 		 characterName.posZ=  -2;
 		 characterName.position.set( characterName.posX, characterName.posY, characterName.posZ);
 		 characterName.scale.set(24,3.5,1);
 		 characterName.name = "characterName";
 		 characterName.update();
-     //Image Source
+		 //Image Source
 		 imageSource = text_creation( "Link to Image Source", 0, 4, 0.68);
 		 imageSource.parameters.font= "100px Arial";
 		 imageSource.parameters.fillStyle= "palegoldenrod";
@@ -1485,13 +1611,45 @@ function init() {
 		 game.update();
 		 categories.push(game);
 		 
+		 // cardSheet
+		 cardSheet = text_creation( "Card Sheet", 0, 3, 0.8);
+		 cardSheet.parameters.font= "135px Arial";
+		 cardSheet.parameters.fillStyle= "#3f3f3f";
+		 cardSheet.posX = 0;
+		 cardSheet.posY =  -22;
+		 cardSheet.posZ=  -2;
+		 cardSheet.position.set( cardSheet.posX, cardSheet.posY, cardSheet.posZ);
+		 cardSheet.scale.set(14,3,1);
+		 cardSheet.name = "cardSheet";
+		 cardSheet.update();		 
 		 
+		 // Board Display
+		 boardDisplay = text_creation( "Board Display", 0, 3, 0.8);
+		 boardDisplay.parameters.font= "135px Arial";
+		 boardDisplay.parameters.fillStyle= "#3f3f3f";
+		 boardDisplay.posX = -17;
+		 boardDisplay.posY =  15;
+		 boardDisplay.posZ=  -2;
+		 boardDisplay.position.set( boardDisplay.posX, boardDisplay.posY, boardDisplay.posZ);
+		 boardDisplay.scale.set(14,3,1);
+		 boardDisplay.name = "boardDisplay";
+		 boardDisplay.update();		
 		 
+		 // List Display
+		 listDisplay = text_creation( "List Display", 0, 3, 0.8);
+		 listDisplay.parameters.font= "135px Arial";
+		 listDisplay.parameters.fillStyle= "#3f3f3f";
+		 listDisplay.posX = -2;
+		 listDisplay.posY =  15;
+		 listDisplay.posZ=  -2;
+		 listDisplay.position.set( listDisplay.posX, listDisplay.posY, listDisplay.posZ);
+		 listDisplay.scale.set(14,3,1);
+		 listDisplay.name = "listDisplay";
+		 listDisplay.update();		
 		 
 	 }
 	 
 	 // Setting the cards 
-
 	 function divide_cards_into_teams(){
 		 //Help from http://www.color-blindness.com/coblis-color-blindness-simulator/
 		 // "Blue" - Team Aqua
@@ -1502,7 +1660,6 @@ function init() {
 		 console.log("Cards Array Lengt : "+cardsArray.length);
 		 //cardsArray.push
 		 
-
 	 }
 	 
 	 // Generate Unique card with a White Background
@@ -1545,7 +1702,6 @@ function init() {
 	 }
 	 
 	 // Right Score Creation
-
 	 function create_Right_Score(){
 		 //Score
 		 if(saveRightScoreTexture == null){
@@ -1557,6 +1713,18 @@ function init() {
 		 var Score = new THREE.SpriteMaterial( { map: saveRightScoreTexture, color: 0xffffff } );
 		 return Score;
 	 }
+	  
+	 //
+	 function create_Square(){
+		 var geometry = new THREE.PlaneBufferGeometry (7, 6,0);
+		 var material = new THREE.MeshBasicMaterial( { color: 0xfafafa } );
+		 var cards = new THREE.Mesh( geometry, material );
+		 //cards.material.transparent = true;
+		 //cards.material.opacity = 0.3; 
+		 cards.name = "cards"; 
+		 return cards;
+	 }
+	  
 	  
 	 //Text Creation Function
 	 //Since this is used more than 10 times throughout the code
