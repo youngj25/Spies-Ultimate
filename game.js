@@ -36,24 +36,25 @@ function init() {
 	 //Insert Data from the Server
 	 Codename.on('CountDown', function(data) {
 		 // console.log(data.Count)
-		 
-		 if(data.Count <= 60) {
-		 // if(data.Count <= 30){
-			 timer.parameters.text = " " + data.Count + " ";
+		 if(Game_State == "Game"){
+			 if(data.Count <= 60) {
+			 // if(data.Count <= 30){
+				 timer.parameters.text = " " + data.Count + " ";
+				 
+				 if(scene.getObjectByName('timesUp') != null)
+					 scene.remove(timesUp);
+			 }
+			 else {
+				 timer.parameters.text = " ";
+				 if(scene.getObjectByName('timesUp') == null)
+					 scene.add(timesUp);
+			 }
 			 
-			 if(scene.getObjectByName('timesUp') != null)
-				 scene.remove(timesUp);
+			 timer.update();		
 		 }
-		 else {
-			 timer.parameters.text = " ";
-			 if(scene.getObjectByName('timesUp') == null)
-				 scene.add(timesUp);
-		 }
-		 
-		 timer.update();		
-		 
 	 });
 	 
+	 // Sets the Board Card Types ( 'Team 1', 'Team 2', 'Assassin' and Null for civilians)
 	 Codename.on('Board', function(data) {
 		 if(Game_State == "Game"){
 			 for(var x = 0; x < 24 && x<cardsTable.length; x++){
@@ -61,8 +62,25 @@ function init() {
 				 console.log(x + ". " + cardsTable[x].type);
 			 }
 		 }
+		 else if(Game_State == "Board"){
+			 for(var x = 0; x < 24 && x<cardBoard.length; x++){
+				 if( data.Board[x].type == null){
+					 cardBoard[x].material.color.setHex(0xffff00);
+				 }
+				 else if( data.Board[x].type == "Assassin"){
+					 cardBoard[x].material.color.setHex(0x575757);
+				 }
+				 else if( data.Board[x].type == "Team 1"){
+					 cardBoard[x].material.color.setHex(0x2260a7);
+				 }
+				 else if( data.Board[x].type == "Team 2"){
+					 cardBoard[x].material.color.setHex(0xa73457);
+				 }
+			 }
+		 }
 	 });
 	 
+	 // Receive information for the Group Leaders
 	 Codename.on('Info', function(data) {
 		 if(Game_State == "Board"){
 			 for(var x = 0; x < 24 && x<cardBoard.length; x++){
@@ -79,7 +97,6 @@ function init() {
 					 cardBoard[x].material.color.setHex(0xa73457);
 				 }
 			 }
-			 //alert("finished.")
 		 }
 	 });
 	 

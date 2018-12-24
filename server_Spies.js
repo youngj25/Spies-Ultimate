@@ -45,9 +45,9 @@ Codename.on('connection', function (socket) {
 		 clearInterval(countDownInterval);
 		 countDownInterval = null;
 		 CountDown = 60;
-	 });
+	 });	 
 	 
-	 //
+	 // A user has started a Game
 	 socket.on('Start Game', function(data){
 		 if(gameState == "Idle"){
 			// gameState = "Active";
@@ -86,8 +86,8 @@ Codename.on('connection', function (socket) {
 				 }				 
 			 }			 			 
 				 
-				 //console.log(data);				 
-			 Codename.emit('Board', data={ Board : cardsArray});			 
+			 // Broadcast the Info
+			 Codename.emit('Board', data={ Board : cardsArray});
 		 }
 	 });
 	 
