@@ -1,6 +1,6 @@
 var socket, Codename = io('/codename', {forceNew:true});
 var cardsTable = [], libraryOfImages = [], imagesOnDisplay = [], totalImages = 0;
-var animeImages = [], cartoonImages = [], gameImages = [], additionalImages = [];
+var animalImages = [], animeImages = [], cartoonImages = [], gameImages = [], additionalImages = [];
 var spriteRatioWidthtoHeight =1, spriteRatioHeighttoWidth=1;
 var Width, Height, Game_State = "Start";
 var startGame, about, categories=[], steps = 0, objects = [];
@@ -140,6 +140,7 @@ function init() {
 	 drag_objects();	 
 	 load_Text_and_Buttons();
 	 load_Start_Screen();
+	 load_Animals_Images();
 	 load_Anime_Images();
 	 load_Cartoon_Images();
 	 load_Game_Images();
@@ -679,10 +680,12 @@ function init() {
 					 
 			 });
 			 
-			 dragControls.addEventListener( 'dragend', function(event)   {
-				 //if (event.object.name == "creditsScrollCircle"){
+			 dragControls.addEventListener( 'dragend', function(event)  {
+				 /**
+				 if (event.object.name == "creditsScrollCircle"){
 					 //event.object.position.y = event.object.posY; 
-				 //}
+				 }
+				 **/
 			 });
 		 
 		 //console.log(dragControls);
@@ -1009,6 +1012,49 @@ function init() {
 		 //Codename.emit('Start Game', data);
 	 }
 	  
+	 // Load Animals Images
+	 function load_Animals_Images(){
+		 //Loading Anime Images from the File
+		 animeImages=[];
+		 
+		  jQuery.get("Images/Animals/Animals.txt", undefined, function(data) {
+			 //Prints the full data
+			 //console.log(data);
+			 var dataLength = data.split("\n").length;
+			 
+			 //Printing out the info
+			 for(var x = 8; x < dataLength-4; x+=6){
+				 //console.log("Series: "+data.split("\n")[x]);
+				 //console.log("Character Name: "+data.split("\n")[x+1]);
+				 //console.log("Filename: "+data.split("\n")[x+2]);
+				 //console.log("Background Color: "+data.split("\n")[x+3]);
+				 //console.log("Image Source: "+data.split("\n")[x+4]);
+				 //console.log(" ");
+				 
+				 var animals = {
+					 series : data.split("\n")[x],
+					 name : data.split("\n")[x+1],
+					 filename: data.split("\n")[x+2],
+					 backgroundColor: data.split("\n")[x+3],
+					 sprite: null,
+					 source: data.split("\n")[x+4]
+				 }
+				 
+				 animalImages.push(animals);
+				 
+			 }
+			 
+			 }, "html").done(function() {
+				 //console.log("second success");
+			 }).fail(function(jqXHR, textStatus) {
+				 console.log("failed");
+			 }).always(function() {
+				 console.log("Animals Loaded - "+animalImages.length+" images");
+				 
+		 });
+		 
+	 }
+	   
 	 // Load Anime Images
 	 function load_Anime_Images(){
 		 //Loading Anime Images from the File
@@ -1194,24 +1240,28 @@ function init() {
 		 // in other words, setting it to zero
 		 var dataArray = [];
 		 
+		 // Animals		 
+		 animalSize = 0;
+		 if(animals.includeCards)
+			 animalSize = animalImages.length;	 
 		 
-		 //Animes		 
+		 // Animes		 
 		 animeSize = 0;
 		 if(anime.includeCards)
 			 animeSize = animeImages.length;
 		 
-		 //Cartoons
+		 // Cartoons
 		 cartoonSize = 0;
 		 if(cartoon.includeCards)
 			 cartoonSize = cartoonImages.length;
 		 
-		 //Games
+		 // Games
 		 gameSize = 0;
 		 if(game.includeCards)
 			 gameSize = gameImages.length;
 		 
-		 //First get a tally of all applicable Images
-		 var totalImages = animeSize + cartoonSize + gameSize;
+		 // First get a tally of all applicable Images
+		 var totalImages = animalSize + animeSize + cartoonSize + gameSize;
 		 
 		 var listOfRandomImages = [];
 		 
@@ -1235,9 +1285,28 @@ function init() {
 				 }				 
 				 //Load the Images from various sections
 				 while(listOfRandomImages.length >= 1){
-					 //First Check if it under anime and if it is add the anime
-					 if(listOfRandomImages[0]  < animeSize){
+					 // First Checks if its under the animals sections  and if it is... add the animal
+					 if(listOfRandomImages[0]  < animalSize){
 						 var x = listOfRandomImages[0];
+						 
+						 if(animalImages[x].sprite == null){						 
+							 animalImages[x].sprite = loadImagesfromText(animalImages[x].filename,"Animals",animalImages[x].backgroundColor);
+							 animalImages[x].sprite.characterName = animalImages[x].name;
+							 animalImages[x].sprite.series = animalImages[x].series;
+							 animalImages[x].sprite.backgroundColor = animalImages[x].backgroundColor;
+						 }
+						 var a = {
+							 name: animalImages[x].name,
+							 series: animalImages[x].series,
+							 type: null
+						 }
+						 dataArray.push(a)
+						 libraryOfImages.push(animalImages[x].sprite);			
+						 listOfRandomImages.shift();
+					 }					 
+					 //Secondly Check if it under anime and if it is add the anime
+					 else if((listOfRandomImages[0]-animalSize)  < animeSize){
+						 var x = listOfRandomImages[0]-animalSize;
 						 
 						 if(animeImages[x].sprite == null){						 
 							 animeImages[x].sprite = loadImagesfromText(animeImages[x].filename,"Anime",animeImages[x].backgroundColor);
@@ -1254,9 +1323,9 @@ function init() {
 						 libraryOfImages.push(animeImages[x].sprite);			
 						 listOfRandomImages.shift();
 					 }
-					 //Second Check if it under Cartoon and if it is add the Cartoon
-					 else if((listOfRandomImages[0]-animeSize)  < cartoonSize){
-						 var x = listOfRandomImages[0]-animeSize;
+					 // Thirdly Check if it under Cartoon and if it is add the Cartoon
+					 else if((listOfRandomImages[0]-animalSize-animeSize)  < cartoonSize){
+						 var x = listOfRandomImages[0]-animalSize-animeSize;
 						 if(cartoonImages[x].sprite == null){			
 							 cartoonImages[x].sprite = loadImagesfromText(cartoonImages[x].filename,"Cartoon",cartoonImages[x].backgroundColor);
 							 cartoonImages[x].sprite.characterName = cartoonImages[x].name;
@@ -1271,9 +1340,9 @@ function init() {
 						 libraryOfImages.push(cartoonImages[x].sprite);		
 						 listOfRandomImages.shift();						 
 					 }
-					 //Thirdly Check if it under game and if it is add the game
-					 else if((listOfRandomImages[0]-animeSize-cartoonSize)  < gameSize){
-						 var x = listOfRandomImages[0]-animeSize-cartoonSize;
+					 // Lastly Check if it under game and if it is add the game
+					 else if((listOfRandomImages[0]-animalSize-animeSize-cartoonSize)  < gameSize){
+						 var x = listOfRandomImages[0]-animalSize-animeSize-cartoonSize;
 						 if(gameImages[x].sprite == null){			
 							 gameImages[x].sprite = loadImagesfromText(gameImages[x].filename,"Game",gameImages[x].backgroundColor);
 							 gameImages[x].sprite.characterName = gameImages[x].name;
@@ -1578,6 +1647,21 @@ function init() {
 		 Categories.name = "Categories";
 		 Categories.update();
 		 categories.push(Categories);
+		 
+		 // Animals
+		 animals = text_creation( "Animals", 0, 3, 0.7);
+		 animals.parameters.font= "135px Arial";
+		 animals.parameters.fillStyle= "#A070F0";
+		 animals.posX = -9;
+		 animals.posY =  13;
+		 animals.posZ = -2;
+		 animals.position.set( animals.posX, animals.posY, animals.posZ);
+		 animals.scale.set(14,3,1);
+		 animals.name = "animals";
+		 animals.includeCards = true;
+		 animals.credits = true;
+		 animals.update();
+		 categories.push(animals);
 		 
 		 // Anime
 		 anime = text_creation( "Animes", 0, 3, 0.7);
