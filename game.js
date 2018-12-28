@@ -23,6 +23,7 @@ function init() {
 	 scene.background = new THREE.Color( 0x000000 );
 	 // create a render and set the size
 	 var renderer = new THREE.WebGLRenderer({ antialias: true} );
+	 //var renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true } ); < -- image saving trial
 	 renderer.setClearColor(new THREE.Color(0x000000, 0.0));
 	 Width = window.innerWidth*0.95;
 	 Height = window.innerHeight*1.025;
@@ -106,6 +107,7 @@ function init() {
 	 //Keyboard Functions
 	 function onKeyDown(event) {
 		 if(event.keyCode == 32 && Game_State == "Game"){
+			 window.open( renderer.domElement.toDataURL( 'image/png' ), 'screenshot' );
 			 //Clear the Scene
 			 while(imagesOnDisplay.length >=1){
 				 scene.remove(imagesOnDisplay[0]);
@@ -715,6 +717,21 @@ function init() {
 		 scene.add(categories[0]);
 		 // The Categories 
 		 for(var x = 1; x < categories.length; x++){
+			 
+			 if(x % 5 == 1)
+				 categories[x].posX = -18;
+			 else if(x % 5 == 2)
+				 categories[x].posX = 0;
+			 else if(x % 5 == 3)
+				 categories[x].posX = 18;
+			 else if(x % 5 == 4)
+				 categories[x].posX = -9;
+			 else if(x % 5 == 0)
+				 categories[x].posX = 9;
+			 
+			 categories[x].posY = 17 - Math.floor((x-1)*5/12)*5;
+			 categories[x].position.set( categories[x].posX, categories[x].posY, categories[x].posZ);
+		 
 			 scene.add(categories[x]);
 			 objects.push(categories[x]);
 		 }
@@ -1010,6 +1027,7 @@ function init() {
 		 // Lazy..
 		 //var data = {size : 24, cards: cardsTable};
 		 //Codename.emit('Start Game', data);
+		 //prompt();  < ------------------------------- Text typing trial
 	 }
 	  
 	 // Load Animals Images

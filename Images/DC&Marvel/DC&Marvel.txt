@@ -1,0 +1,13 @@
+DC/Marvel Loading Instructions
+The Format for this process is:
+Series
+Name of the Character
+Name of the Image File
+The Background color of the Card
+The Source of the Image
+
+Static Shock
+Static Shock
+Static.png
+Black
+http://dcnation.wikifoundry.com/page/Static+%28Virgil+Hawkins%29

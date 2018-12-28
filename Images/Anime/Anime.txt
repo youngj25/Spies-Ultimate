@@ -6,7 +6,7 @@ Name of the Image File
 The Background color of the Card
 The Source of the Image
 
-Attack on Titans
+Attack on Titan
 Mikasa
 Mikasa.png
 Black
@@ -23,18 +23,6 @@ Kenpachi
 Kenpachi.png
 White
 https://www.kisspng.com/png-kenpachi-zaraki-kusajishi-yachiru-nnoitra-gilga-re-2366531/
-
-Boku no Hero Academia
-Bakugou
-Baku.png
-White
-https://www.reddit.com/r/BokuNoHeroAcademia/comments/6hpmyq/artwork_i_colored_this_bakugou_panel/
-
-Boku no Hero Academia
-Mineta
-Mineta.png
-Black
-http://bokunoheroacademia.wikia.com/wiki/File:Minoru_Mineta_hero_icon_2.png
 
 Code Geass
 Lelouch/Zero
@@ -96,7 +84,7 @@ shinpachi.png
 White
 https://rwalck.wordpress.com/2014/11/05/reading-glasses-strength/
 
-Hajime no Ippo
+Fighting Spirit
 Ippo
 ippo.png
 Black
@@ -108,7 +96,7 @@ Hisoka.png
 Black
 http://hunterxonline.wikia.com/wiki/File:Hisoka.png
 
-Jojo
+JoJo's Bizarre Adventure
 Jonathan
 Jonathan.png
 White
@@ -119,12 +107,6 @@ Yui
 Yui.png
 Black
 http://smashbroslawlorigins.wikia.com/wiki/Yui_Hirasawa
-
-Katekyo Hitman Reborn
-Tsuna
-tsuna.png
-Black
-http://reborn.wikia.com/wiki/Hyper_Dying_Will_Mode
 
 Kenichi: History Strongest Disciple
 Kenichi
@@ -138,9 +120,21 @@ Akko.png
 White
 http://little-witch-academia.wikia.com/wiki/Atsuko_Kagari
 
+My Hero Academia
+Bakugou
+Baku.png
+White
+https://www.reddit.com/r/BokuNoHeroAcademia/comments/6hpmyq/artwork_i_colored_this_bakugou_panel/
+
+My Hero Academia
+Mineta
+Mineta.png
+Black
+http://bokunoheroacademia.wikia.com/wiki/File:Minoru_Mineta_hero_icon_2.png
+
 Naruto
 Jiraiya
-jiraiya.png
+Jiraiya.png
 Black
 https://www.ign.com/articles/2008/02/25/naruto-the-three-villains-from-the-maximum-security-prison-review
 
@@ -155,6 +149,12 @@ Blaziken
 Blaziken.png
 White
 https://www.pokemon.com/us/pokedex/blaziken
+
+Reborn!
+Tsuna
+tsuna.png
+Black
+http://reborn.wikia.com/wiki/Hyper_Dying_Will_Mode
 
 Samurai Champloo
 Mugen
